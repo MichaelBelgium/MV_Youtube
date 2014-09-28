@@ -1,7 +1,9 @@
 Youtube
 =======
 
-[MV]_Youtube, Stream youtube links into your SA:MP Server
+[MV]_Youtube, Stream youtube links into your SA:MP Server.
+
+Functions and callbacks:
 
 ```PAWN
 native PlayYoutubeVideoForPlayer(playerid,url[])
