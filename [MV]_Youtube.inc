@@ -9,7 +9,7 @@ native PlayYoutubeVideoForPlayer(playerid,url[])
 native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
 native IsYouTubeVideoPlaying()
-native GetLengthOfVideo()
+native GetVideoDuration()
 native GetVideoTitle()
 native GetVideoLink()
 
@@ -23,6 +23,8 @@ Update 2.0
 - Added stock ContainsYoutubeURL, IsYouTubeVideoPlaying, GetLengthOfVideo, GetVideoTitle and GetVideoLink
 - Improved code
 
+Update 2.0.1
+- Renamed GetLengthOfVideo to GetVideoDuration
 */
 
 #include <a_http>
@@ -44,7 +46,7 @@ stock StopYoutubeVideoForPlayer(playerid) 	return StopAudioStreamForPlayer(playe
 stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != 1 && strfind(string,"watch?v=") != 1);
 
 stock IsYouTubeVideoPlaying() 	return g_playing;
-stock GetLengthOfVideo() 		return g_duration;
+stock GetVideoDuration() 		return g_duration;
 stock GetVideoTitle() 			return g_title;
 stock GetVideoLink() 			return g_link;
 
