@@ -1,3 +1,4 @@
+```pawn
 /*
 Credits:
 
@@ -140,3 +141,4 @@ stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices
 
 	return iPrevious;
 }
+```
