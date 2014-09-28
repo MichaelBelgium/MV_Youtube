@@ -12,7 +12,7 @@ native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
 native IsYouTubeVideoPlaying()
 
-native GetLengthOfVideo()
+native GetVideoDuration()
 native GetVideoTitle()
 native GetVideoLink()
 
