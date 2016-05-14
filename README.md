@@ -27,5 +27,5 @@ To install or use [MV]_Youtube include you have to have to include line:
 ```
 
 <h1>Images</h1>
-<img src="http://exp-gaming.net/images/MV_YT.png" />
-<img src="http://exp-gaming.net/images/MV_YT2.png" />
+<img src="http://puu.sh/oRnMo.jpg" />
+<img src="http://puu.sh/oRnNh.png" />
