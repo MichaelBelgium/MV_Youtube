@@ -12,19 +12,6 @@ native IsYouTubeVideoPlaying()
 native GetVideoDuration()
 native GetVideoTitle()
 native GetVideoLink()
-
-Update 1.1:
-- Fixed where server crashes when you have a youtube link with more GET params
-
-Update 1.2:
-- Added callback OnYoutubeVideoFinished(playerid)
-
-Update 2.0
-- Added stock ContainsYoutubeURL, IsYouTubeVideoPlaying, GetLengthOfVideo, GetVideoTitle and GetVideoLink
-- Improved code
-
-Update 2.0.1
-- Renamed GetLengthOfVideo to GetVideoDuration
 */
 
 #include <a_http>
@@ -38,7 +25,7 @@ stock PlayYoutubeVideoForPlayer(playerid,url[])
 {
 	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"),128);
 	format(g_link,sizeof(g_link),"%s",url);
-	format(url,128,"youtubeinmp3.com/fetch/?api=advanced&video=%s",g_link);
+	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s",g_link);
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
@@ -58,7 +45,8 @@ public OnYoutubeResponse(playerid, response_code, data[])
 		new content[3][256],stream[256],string[256];
 		new hours,minutes,seconds,tmp_seconds[8];
 
-		explode(content,data,"<br />");
+		explode(content,data,"<br/>");
+
 		strmid(tmp_seconds,content[1],8,strlen(content[1]));
 		strmid(stream,content[2],6,strlen(content[2]));
 
@@ -67,7 +55,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 
 		formatSeconds(g_duration,hours,minutes,seconds);
 		
-  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02d:%02d:%02d)",GetVideoTitle(),hours,minutes,seconds);
+  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(),hours,minutes,seconds);
 		SendClientMessage(playerid,-1,string);
 
 		PlayAudioStreamForPlayer(playerid,stream);
@@ -85,7 +73,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 
 public SongFinished(playerid)
 {
-    g_playing = false;
+	g_playing = false;
 	CallLocalFunction("OnYoutubeVideoFinished","i",playerid);
 }
 
@@ -109,9 +97,9 @@ stock GetError(val)
 
 stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 {
-    hours_left = seconds/60/60;
-    minutes_left = (seconds - hours_left*60*60)/60;
-    seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
+	hours_left = seconds/60/60;
+	minutes_left = (seconds - hours_left*60*60)/60;
+	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
 }
 
 stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices = sizeof aExplode, iLength = sizeof aExplode[])
