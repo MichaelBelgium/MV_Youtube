@@ -8,34 +8,42 @@ Michael@Belgium - [MV]_Youtube
 native PlayYoutubeVideoForPlayer(playerid,url[])
 native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
-native IsYouTubeVideoPlaying()
-native GetVideoDuration()
-native GetVideoTitle()
-native GetVideoLink()
+native IsYouTubeVideoPlaying(ofplayerid)
+native GetVideoDuration(ofplayerid)
+native GetVideoTitle(ofplayerid)
+native GetVideoLink(ofplayerid)
 */
 
 #include <a_http>
 
-new bool:g_playing = false, g_title[256], g_duration = 0, g_link[64];
+enum e_yt
+{
+	bool:Playing,
+	Duration,
+	Title[256],
+	Link
+};
+
+new Youtube[MAX_PLAYERS][e_yt];
 
 forward OnYoutubeVideoFinished(playerid);
 forward SongFinished(playerid);
 
-stock PlayYoutubeVideoForPlayer(playerid,url[])
+stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0)
 {
 	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"),128);
-	format(g_link,sizeof(g_link),"%s",url);
-	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s",g_link);
+	format(Youtube[playerid],256,"%s",url);
+	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[playerid],start);
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
-stock StopYoutubeVideoForPlayer(playerid) 	return StopAudioStreamForPlayer(playerid);
-stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != -1 && strfind(string,"watch?v=") != -1);
+stock StopYoutubeVideoForPlayer(playerid)	return StopAudioStreamForPlayer(playerid);
+stock ContainsYoutubeURL(string[])			return (strfind(string,"youtube") != -1 && strfind(string,"watch?v=") != -1);
 
-stock IsYouTubeVideoPlaying() 	return g_playing;
-stock GetVideoDuration() 		return g_duration;
-stock GetVideoTitle() 			return g_title;
-stock GetVideoLink() 			return g_link;
+stock IsYouTubeVideoPlaying(ofplayerid)		return Youtube[ofplayerid][Playing];
+stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
+stock GetVideoTitle(ofplayerid)				return Youtube[ofplayerid][Title];
+stock GetVideoLink(ofplayerid)				return Youtube[ofplayerid][Link];
 
 forward OnYoutubeResponse(playerid, response_code, data[]);
 public OnYoutubeResponse(playerid, response_code, data[])
@@ -60,18 +68,18 @@ public OnYoutubeResponse(playerid, response_code, data[])
 			strmid(tmp_seconds,content[1],8,strlen(content[1]));
 			strmid(stream,content[2],6,strlen(content[2]));
 
-			g_duration = strval(tmp_seconds);
-			g_title = content[0];
+			Youtube[playerid][Duration] = strval(tmp_seconds);
+			Youtube[playerid][Title] = content[0];
 
-			formatSeconds(g_duration,hours,minutes,seconds);
+			formatSeconds(Youtube[playerid][Duration],hours,minutes,seconds);
 			
-	  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(),hours,minutes,seconds);
+	  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(playerid),hours,minutes,seconds);
 			SendClientMessage(playerid,-1,string);
 
 			PlayAudioStreamForPlayer(playerid,stream);
-			g_playing = true;
+			Youtube[playerid][Playing] = true;
 			
-			SetTimerEx("SongFinished",(g_duration+5)*1000,false,"i",playerid);
+			SetTimerEx("SongFinished",(Youtube[playerid][Duration]+5)*1000,false,"i",playerid);
 		}
 	}
 	else
@@ -83,7 +91,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 
 public SongFinished(playerid)
 {
-	g_playing = false;
+	Youtube[playerid][Playing] = false;
 	CallLocalFunction("OnYoutubeVideoFinished","i",playerid);
 }
 
@@ -138,6 +146,5 @@ stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices
 		iPrevious = (iPointer += iDelimiter);
 		++iNode;
 	}
-
 	return iPrevious;
 }
