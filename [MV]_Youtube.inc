@@ -41,12 +41,12 @@ forward OnYoutubeResponse(playerid, response_code, data[]);
 public OnYoutubeResponse(playerid, response_code, data[])
 {
 	new error[128];
-	
+
 	if(response_code == 200)
 	{
 		if (!strcmp(data, "<meta", true, 5))
 		{
-			response_code = 6;
+			response_code = 7;
 			format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
 			SendClientMessage(playerid,0xFF0000FF,error);
 		}
@@ -98,6 +98,7 @@ stock GetError(val)
 		case 4: error = "Can't write";
 		case 5: error = "Content too big";
 		case 6: error = "Malformed response";
+		case 7: error = "Youtube -> MP3 api failed";
 		case 300..308: error = "Redirection";
 		case 400..499: error = "Client error";
 		case 500..599: error = "Server error";
