@@ -30,7 +30,7 @@ stock PlayYoutubeVideoForPlayer(playerid,url[])
 }
 
 stock StopYoutubeVideoForPlayer(playerid) 	return StopAudioStreamForPlayer(playerid);
-stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != 1 && strfind(string,"watch?v=") != 1);
+stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != -1 && strfind(string,"watch?v=") != -1);
 
 stock IsYouTubeVideoPlaying() 	return g_playing;
 stock GetVideoDuration() 		return g_duration;
@@ -40,32 +40,42 @@ stock GetVideoLink() 			return g_link;
 forward OnYoutubeResponse(playerid, response_code, data[]);
 public OnYoutubeResponse(playerid, response_code, data[])
 {
+	new error[128];
+
 	if(response_code == 200)
 	{
-		new content[3][256],stream[256],string[256];
-		new hours,minutes,seconds,tmp_seconds[8];
+		if (!strcmp(data, "<meta", true, 5))
+		{
+			response_code = 7;
+			format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
+			SendClientMessage(playerid,0xFF0000FF,error);
+		}
+		else
+		{
+			new content[3][256],stream[256],string[256];
+			new hours,minutes,seconds,tmp_seconds[8];
 
-		explode(content,data,"<br/>");
+			explode(content,data,"<br/>");
 
-		strmid(tmp_seconds,content[1],8,strlen(content[1]));
-		strmid(stream,content[2],6,strlen(content[2]));
+			strmid(tmp_seconds,content[1],8,strlen(content[1]));
+			strmid(stream,content[2],6,strlen(content[2]));
 
-		g_duration = strval(tmp_seconds);
-		g_title = content[0];
+			g_duration = strval(tmp_seconds);
+			g_title = content[0];
 
-		formatSeconds(g_duration,hours,minutes,seconds);
-		
-  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(),hours,minutes,seconds);
-		SendClientMessage(playerid,-1,string);
+			formatSeconds(g_duration,hours,minutes,seconds);
+			
+	  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(),hours,minutes,seconds);
+			SendClientMessage(playerid,-1,string);
 
-		PlayAudioStreamForPlayer(playerid,stream);
-		g_playing = true;
-		
-		SetTimerEx("SongFinished",(g_duration+5)*1000,false,"i",playerid);
+			PlayAudioStreamForPlayer(playerid,stream);
+			g_playing = true;
+			
+			SetTimerEx("SongFinished",(g_duration+5)*1000,false,"i",playerid);
+		}
 	}
 	else
 	{
-		new error[128];
 		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
 		SendClientMessage(playerid,0xFF0000FF,error);
 	}
@@ -88,6 +98,7 @@ stock GetError(val)
 		case 4: error = "Can't write";
 		case 5: error = "Content too big";
 		case 6: error = "Malformed response";
+		case 7: error = "Youtube -> MP3 api failed";
 		case 300..308: error = "Redirection";
 		case 400..499: error = "Client error";
 		case 500..599: error = "Server error";
