@@ -6,15 +6,15 @@ Youtube
 Functions and callbacks:
 
 ```PAWN
-native PlayYoutubeVideoForPlayer(playerid,url[])
+native PlayYoutubeVideoForPlayer(playerid,url[],start = 0)
 native StopYoutubeVideoForPlayer(playerid)
 
 native ContainsYoutubeURL(string[])
-native IsYouTubeVideoPlaying()
+native IsYouTubeVideoPlaying(ofplayerid)
 
-native GetVideoDuration()
-native GetVideoTitle()
-native GetVideoLink()
+native GetVideoDuration(ofplayerid)
+native GetVideoTitle(ofplayerid)
+native GetVideoLink(ofplayerid)
 
 public OnYoutubeVideoFinished(playerid)
 ```
