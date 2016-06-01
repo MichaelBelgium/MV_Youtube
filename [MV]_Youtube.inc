@@ -30,7 +30,7 @@ stock PlayYoutubeVideoForPlayer(playerid,url[])
 }
 
 stock StopYoutubeVideoForPlayer(playerid) 	return StopAudioStreamForPlayer(playerid);
-stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != 1 && strfind(string,"watch?v=") != 1);
+stock ContainsYoutubeURL(string[]) 			return (strfind(string,"youtube") != -1 && strfind(string,"watch?v=") != -1);
 
 stock IsYouTubeVideoPlaying() 	return g_playing;
 stock GetVideoDuration() 		return g_duration;
