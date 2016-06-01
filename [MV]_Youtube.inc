@@ -32,8 +32,8 @@ forward SongFinished(playerid);
 stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0)
 {
 	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"),128);
-	format(Youtube[playerid],256,"%s",url);
-	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[playerid],start);
+	format(Youtube[playerid][Link],256,"%s",url);
+	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[playerid][Link],start);
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
