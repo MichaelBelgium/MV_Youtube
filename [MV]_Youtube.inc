@@ -5,7 +5,7 @@ YoutubeInMP3 - API - http://youtubeinmp3.com/api/
 Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
 Michael@Belgium - [MV]_Youtube
 
-native PlayYoutubeVideoForPlayer(playerid,url[])
+native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
 native IsYouTubeVideoPlaying(ofplayerid)
@@ -21,7 +21,9 @@ enum e_yt
 	bool:Playing,
 	Duration,
 	Title[256],
-	Link
+	Link,
+	Float: Distance,
+	bool: Usepos
 };
 
 new Youtube[MAX_PLAYERS][e_yt];
@@ -29,9 +31,11 @@ new Youtube[MAX_PLAYERS][e_yt];
 forward OnYoutubeVideoFinished(playerid);
 forward SongFinished(playerid);
 
-stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0)
+stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 {
 	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"),128);
+	Youtube[playerid][Distance] = distance;
+	Youtube[playerid][Usepos] = usepos;
 	format(Youtube[playerid][Link],256,"%s",url);
 	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[playerid][Link],start);
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
@@ -60,7 +64,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 		}
 		else
 		{
-			new content[3][256],stream[256],string[256];
+			new content[3][256],stream[256],string[256],Float:pos[3];
 			new hours,minutes,seconds,tmp_seconds[8];
 
 			explode(content,data,"<br/>");
@@ -70,13 +74,14 @@ public OnYoutubeResponse(playerid, response_code, data[])
 
 			Youtube[playerid][Duration] = strval(tmp_seconds);
 			Youtube[playerid][Title] = content[0];
+			if(Youtube[playerid][Usepos]) GetPlayerPos(playerid, pos[0], pos[1], pos[2]);
 
 			formatSeconds(Youtube[playerid][Duration],hours,minutes,seconds);
 			
 	  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(playerid),hours,minutes,seconds);
 			SendClientMessage(playerid,-1,string);
 
-			PlayAudioStreamForPlayer(playerid,stream);
+			PlayAudioStreamForPlayer(playerid, stream, pos[0], pos[1], pos[2], Youtube[playerid][Distance], Youtube[playerid][Usepos]);
 			Youtube[playerid][Playing] = true;
 			
 			SetTimerEx("SongFinished",(Youtube[playerid][Duration]+5)*1000,false,"i",playerid);
@@ -92,6 +97,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 public SongFinished(playerid)
 {
 	Youtube[playerid][Playing] = false;
+	Youtube[playerid][Usepos] = false;
 	CallLocalFunction("OnYoutubeVideoFinished","i",playerid);
 }
 
