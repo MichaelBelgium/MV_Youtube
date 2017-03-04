@@ -19,7 +19,7 @@ enum e_yt
 	bool:Playing,
 	Duration,
 	Title[256],
-	Link,
+	Link[256],
 	Float: Distance,
 	bool: Usepos
 };
@@ -45,8 +45,17 @@ stock ContainsYoutubeURL(string[])			return (strfind(string,"youtube") != -1 && 
 
 stock IsYouTubeVideoPlaying(ofplayerid)		return Youtube[ofplayerid][Playing];
 stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
-stock GetVideoTitle(ofplayerid)				return Youtube[ofplayerid][Title];
-stock GetVideoLink(ofplayerid)				return Youtube[ofplayerid][Link];
+stock GetVideoTitle(ofplayerid) {
+    new str[256];
+    strins(str, Youtube[ofplayerid][Title], 0);
+    return str;
+}
+
+stock GetVideoLink(ofplayerid) {
+    new str[256];
+    strins(str, Youtube[ofplayerid][Link], 0);
+    return str;
+}
 
 public OnYoutubeResponse(playerid, response_code, data[])
 {
