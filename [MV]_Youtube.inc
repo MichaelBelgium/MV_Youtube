@@ -1,10 +1,8 @@
 /*
 Credits:
-
 YoutubeInMP3 - API - http://youtubeinmp3.com/api/
 Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
 Michael@Belgium - [MV]_Youtube
-
 native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
@@ -30,6 +28,7 @@ new Youtube[MAX_PLAYERS][e_yt];
 
 forward OnYoutubeVideoFinished(playerid);
 forward SongFinished(playerid);
+forward OnYoutubeResponse(playerid, response_code, data[]);
 
 stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 {
@@ -49,7 +48,6 @@ stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
 stock GetVideoTitle(ofplayerid)				return Youtube[ofplayerid][Title];
 stock GetVideoLink(ofplayerid)				return Youtube[ofplayerid][Link];
 
-forward OnYoutubeResponse(playerid, response_code, data[]);
 public OnYoutubeResponse(playerid, response_code, data[])
 {
 	new error[128];
@@ -69,11 +67,11 @@ public OnYoutubeResponse(playerid, response_code, data[])
 
 			explode(content,data,"<br/>");
 
+			strmid(Youtube[playerid][Title], content[0], 7, strlen(content[0]), 256);
 			strmid(tmp_seconds,content[1],8,strlen(content[1]));
 			strmid(stream,content[2],6,strlen(content[2]));
 
 			Youtube[playerid][Duration] = strval(tmp_seconds);
-			Youtube[playerid][Title] = content[0];
 			if(Youtube[playerid][Usepos]) GetPlayerPos(playerid, pos[0], pos[1], pos[2]);
 
 			formatSeconds(Youtube[playerid][Duration],hours,minutes,seconds);
@@ -89,7 +87,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 	}
 	else
 	{
-		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
+		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",data, response_code, GetError(response_code));
 		SendClientMessage(playerid,0xFF0000FF,error);
 	}
 }
