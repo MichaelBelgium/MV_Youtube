@@ -3,6 +3,7 @@ Credits:
 YoutubeInMP3 - API - http://youtubeinmp3.com/api/
 Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
 Michael@Belgium - [MV]_Youtube
+
 native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
 native ContainsYoutubeURL(string[])
@@ -40,18 +41,26 @@ stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
-stock StopYoutubeVideoForPlayer(playerid)	return StopAudioStreamForPlayer(playerid);
-stock ContainsYoutubeURL(string[])			return (strfind(string,"youtube") != -1 && strfind(string,"watch?v=") != -1);
+stock PlayYoutubeVideoForAll(url[], start = 0, Float:distance = 50.0, bool:usepos = false)
+{
+	for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		if(IsPlayerConnected(i))
+			PlayYoutubeVideoForPlayer(i, url, start, distance, usepos);
+}
 
+stock StopYoutubeVideoForPlayer(playerid)	return StopAudioStreamForPlayer(playerid);
+stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(ofplayerid)		return Youtube[ofplayerid][Playing];
 stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
-stock GetVideoTitle(ofplayerid) {
+stock GetVideoTitle(ofplayerid) 
+{
     new str[256];
     strins(str, Youtube[ofplayerid][Title], 0);
     return str;
 }
 
-stock GetVideoLink(ofplayerid) {
+stock GetVideoLink(ofplayerid) 
+{
     new str[256];
     strins(str, Youtube[ofplayerid][Link], 0);
     return str;
@@ -96,7 +105,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 	}
 	else
 	{
-		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",data, response_code, GetError(response_code));
+		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d - %s)",data, response_code, GetError(response_code));
 		SendClientMessage(playerid,0xFF0000FF,error);
 	}
 }
@@ -152,9 +161,7 @@ stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices
 			break;
 		}
 		else
-		{
 			strmid(aExplode[iNode], sSource, iPrevious, iPointer, iLength);
-		}
 
 		iPrevious = (iPointer += iDelimiter);
 		++iNode;

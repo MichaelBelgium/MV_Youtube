@@ -7,6 +7,7 @@ Functions and callbacks:
 
 ```PAWN
 native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
+native PlayYoutubeVideoForAll(url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
 
 native ContainsYoutubeURL(string[])
