@@ -48,7 +48,11 @@ stock PlayYoutubeVideoForAll(url[], start = 0, Float:distance = 50.0, bool:usepo
 			PlayYoutubeVideoForPlayer(i, url, start, distance, usepos);
 }
 
-stock StopYoutubeVideoForPlayer(playerid)	return StopAudioStreamForPlayer(playerid);
+stock StopYoutubeVideoForPlayer(playerid)	
+{
+	Youtube[playerid][Playing] = false;
+	StopAudioStreamForPlayer(playerid);
+}
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(ofplayerid)		return Youtube[ofplayerid][Playing];
 stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
