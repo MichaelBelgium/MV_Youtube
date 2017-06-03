@@ -1,19 +1,26 @@
 /*
 Credits:
+
 YoutubeInMP3 - API - http://youtubeinmp3.com/api/
 Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
 Michael@Belgium - [MV]_Youtube
 
 native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
-native ContainsYoutubeURL(string[])
+native IsValidYoutubeURL(string[])
 native IsYouTubeVideoPlaying(ofplayerid)
 native GetVideoDuration(ofplayerid)
 native GetVideoTitle(ofplayerid)
 native GetVideoLink(ofplayerid)
 */
 
+#define USE_JSON	true 		//do you have SAMPSON ?
+
 #include <a_http>
+
+#if USE_JSON
+	#include <a_json>
+#endif
 
 enum e_yt
 {
@@ -37,7 +44,7 @@ stock PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.
 	Youtube[playerid][Distance] = distance;
 	Youtube[playerid][Usepos] = usepos;
 	format(Youtube[playerid][Link],256,"%s",url);
-	format(url,128,"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[playerid][Link],start);
+	format(url,128,"youtubeinmp3.com/fetch/?format=%s&video=%s&start=%i",USE_JSON == true ? ("json") : ("text"), Youtube[playerid][Link],start);
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
@@ -84,16 +91,29 @@ public OnYoutubeResponse(playerid, response_code, data[])
 		}
 		else
 		{
-			new content[3][256],stream[256],string[256],Float:pos[3];
-			new hours,minutes,seconds,tmp_seconds[8];
+			new stream[256],string[256],Float:pos[3], hours,minutes,seconds, tmp_seconds[8];
 
-			explode(content,data,"<br/>");
+			#if USE_JSON
+				new JSONNode:response;
 
-			strmid(Youtube[playerid][Title], content[0], 7, strlen(content[0]), 256);
-			strmid(tmp_seconds,content[1],8,strlen(content[1]));
-			strmid(stream,content[2],6,strlen(content[2]));
+				response = json_parse_string(data);
+				json_get_string(response, Youtube[playerid][Title], 256, "title");
+				json_get_string(response, tmp_seconds, 8, "length");
+				json_get_string(response, stream, 256, "link");
 
-			Youtube[playerid][Duration] = strval(tmp_seconds);
+				Youtube[playerid][Duration] = strval(tmp_seconds);
+			#else
+				new content[3][256];
+
+				explode(content,data,"<br/>");
+
+				strmid(Youtube[playerid][Title], content[0], 7, strlen(content[0]), 256);
+				strmid(tmp_seconds,content[1],8,strlen(content[1]));
+				strmid(stream,content[2],6,strlen(content[2]));
+
+				Youtube[playerid][Duration] = strval(tmp_seconds);
+			#endif
+
 			if(Youtube[playerid][Usepos]) GetPlayerPos(playerid, pos[0], pos[1], pos[2]);
 
 			formatSeconds(Youtube[playerid][Duration],hours,minutes,seconds);

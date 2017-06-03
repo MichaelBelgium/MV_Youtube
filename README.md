@@ -1,16 +1,15 @@
-Youtube
-=======
+# Youtube
 
-[MV]_Youtube, Stream youtube links into your SA:MP Server.
+[MV]_Youtube, with this include players are able to stream youtube video's in-game.
 
-Functions and callbacks:
+## Functions and callbacks:
 
 ```PAWN
 native PlayYoutubeVideoForPlayer(playerid, url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native PlayYoutubeVideoForAll(url[], start = 0, Float:distance = 50.0, bool:usepos = false)
 native StopYoutubeVideoForPlayer(playerid)
 
-native ContainsYoutubeURL(string[])
+native IsValidYoutubeURL(string[])
 native IsYouTubeVideoPlaying(ofplayerid)
 
 native GetVideoDuration(ofplayerid)
@@ -20,13 +19,15 @@ native GetVideoLink(ofplayerid)
 public OnYoutubeVideoFinished(playerid)
 ```
 
-<h1>Installing</h1>
+# Installing
 
 To install or use [MV]_Youtube include you have to have to include line:
 ```pawn
 #include <[MV]_Youtube>
 ```
 
-<h1>Images</h1>
+*If you want to use JSON you need to have [SAMPSON](https://github.com/Hual/SAMPSON)*
+
+# Images
 <img src="http://puu.sh/oRnMo.jpg" />
 <img src="http://puu.sh/oRnNh.png" />
