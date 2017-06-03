@@ -100,6 +100,7 @@ public OnYoutubeResponse(playerid, response_code, data[])
 				json_get_string(response, Youtube[playerid][Title], 256, "title");
 				json_get_string(response, tmp_seconds, 8, "length");
 				json_get_string(response, stream, 256, "link");
+				json_close(response);
 
 				Youtube[playerid][Duration] = strval(tmp_seconds);
 			#else
