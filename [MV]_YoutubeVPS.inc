@@ -27,11 +27,11 @@ stock PlayYoutubeVideoForPlayer(playerid, url[], Float:distance = 50.0, bool:use
 	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
 }
 
-stock PlayYoutubeVideoForAll(url[], start = 0, Float:distance = 50.0, bool:usepos = false)
+stock PlayYoutubeVideoForAll(url[], Float:distance = 50.0, bool:usepos = false)
 {
 	for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 		if(IsPlayerConnected(i))
-			PlayYoutubeVideoForPlayer(i, url, start, distance, usepos);
+			PlayYoutubeVideoForPlayer(i, url, distance, usepos);
 }
 
 stock StopYoutubeVideoForPlayer(playerid)	
