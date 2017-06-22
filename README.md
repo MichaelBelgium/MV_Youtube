@@ -7,18 +7,17 @@
 **The functions PlayYoutubeVideoFor.. depends on which API you use.**
 
 ```PAWN
-native PlayYoutubeVideoForPlayer(playerid, url[], (start = 0,) Float:distance = 50.0, bool:usepos = false)
-native PlayYoutubeVideoForAll(url[], (start = 0,) Float:distance = 50.0, bool:usepos = false)
-native StopYoutubeVideoForPlayer(playerid)
+native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0) - returns a youtubeid
+native StopYoutubeVideo(youtubeid)
 
 native IsValidYoutubeURL(string[])
-native IsYouTubeVideoPlaying(ofplayerid)
+native IsYouTubeVideoPlaying(youtubeid)
 
-native GetVideoDuration(ofplayerid)
-native GetVideoTitle(ofplayerid)
-native GetVideoLink(ofplayerid)
+native GetVideoDuration(youtubeid)
+native GetVideoTitle(youtubeid)
+native GetVideoLink(youtubeid)
 
-public OnYoutubeVideoFinished(playerid)
+public OnYoutubeVideoFinished(youtubeid)
 ```
 
 # Installing
@@ -34,7 +33,7 @@ If you have your own dedicated server / vps / any kind then I recommend you make
 
 ## youtubemp3script 
 
-* Requires an **API key**
+* Requires an **API key** (the key "12345" works so it's default)
 * File: `[MV]_Youtube2.inc`
 * Uses: JSON
 

@@ -2,115 +2,141 @@
 Credits:
 youtubemp3script - API -http://www.youtubemp3script.com/
 Michael@Belgium - [MV]_Youtube
-
-native PlayYoutubeVideoForPlayer(playerid, url[], Float:distance = 50.0, bool:usepos = false)
-native StopYoutubeVideoForPlayer(playerid)
-native ContainsYoutubeURL(string[])
-native IsYouTubeVideoPlaying(ofplayerid)
-native GetVideoDuration(ofplayerid)
-native GetVideoTitle(ofplayerid)
-native GetVideoLink(ofplayerid)
 */
 
 #include <a_http>
 #include <a_json>
 
-enum e_yt
+#define API_KEY	"12345"
+#define MAX_YOUTUBE_SAVES	50
+#define INVALID_YT_INDEX	-1
+
+enum e_ytv
 {
 	bool:Playing,
 	Duration,
 	Title[256],
 	Link[256],
-	Float: Distance,
-	bool: Usepos
+	StreamLink[256],
+	PlayFor,
+	Float:Distance,
+	bool:UsePos
 };
 
-new Youtube[MAX_PLAYERS][e_yt];
+new Youtube[MAX_YOUTUBE_SAVES][e_ytv];
 
-forward OnYoutubeVideoFinished(playerid);
-forward SongFinished(playerid);
-forward OnYoutubeResponse(playerid, response_code, data[]);
+forward OnYoutubeVideoFinished(youtubeid);
+forward SongFinished(youtubeid);
+forward OnYoutubeResponse(index, response_code, data[]);
 
-stock PlayYoutubeVideoForPlayer(playerid, url[], Float:distance = 50.0, bool:usepos = false)
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0)
 {
-	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"),128);
-	Youtube[playerid][Distance] = distance;
-	Youtube[playerid][Usepos] = usepos;
-	format(Youtube[playerid][Link],256,"%s",url);
-	format(url,128,"www.yt-mp3.com/fetch?v=%s&apikey=1234567",Youtube[playerid][Link]);
-	HTTP(playerid, HTTP_GET, url, "", "OnYoutubeResponse");
+	new id = GetFreeIndex();
+
+	Youtube[id][PlayFor] = playfor;
+	Youtube[id][Distance] = distance;
+	Youtube[id][UsePos] = usepos;
+
+	DownloadSong(id, url);
+
+	return id;
 }
 
-stock PlayYoutubeVideoForAll(url[], Float:distance = 50.0, bool:usepos = false)
+stock GetFreeIndex()
 {
-	for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
-		if(IsPlayerConnected(i))
-			PlayYoutubeVideoForPlayer(i, url, distance, usepos);
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(!Youtube[i][Playing]) return i;
+	}
+
+	return INVALID_YT_INDEX;
 }
 
-stock StopYoutubeVideoForPlayer(playerid)	
+stock DownloadSong(id, youtubelink[])
 {
-	Youtube[playerid][Playing] = false;
-	StopAudioStreamForPlayer(playerid);
+	new requestlink[128];
+
+	if(strfind(youtubelink,"&") != -1) strmid(youtubelink,youtubelink,0,strfind(youtubelink,"&"), 128);
+	format(Youtube[id][Link],256,"%s",youtubelink);
+
+	format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
+	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+}
+
+stock StopYoutubeVideo(youtubeid)	
+{
+	Youtube[youtubeid][Playing] = false;
 }
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
-stock IsYouTubeVideoPlaying(ofplayerid)		return Youtube[ofplayerid][Playing];
-stock GetVideoDuration(ofplayerid)			return Youtube[ofplayerid][Duration];
-stock GetVideoTitle(ofplayerid) 
+stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];
+stock GetVideoDuration(youtubeid)			return Youtube[youtubeid][Duration];
+stock GetVideoTitle(youtubeid) 
 {
     new str[256];
-    strins(str, Youtube[ofplayerid][Title], 0);
+    strins(str, Youtube[youtubeid][Title], 0);
     return str;
 }
 
-stock GetVideoLink(ofplayerid) 
+stock GetVideoLink(youtubeid) 
 {
     new str[256];
-    strins(str, Youtube[ofplayerid][Link], 0);
+    strins(str, Youtube[youtubeid][Link], 0);
     return str;
 }
 
-public OnYoutubeResponse(playerid, response_code, data[])
+public OnYoutubeResponse(index, response_code, data[])
 {
-	new error[128],stream[512];
-
 	if(response_code == 200)
 	{
 		new JSONNode:response, Float:pos[3], hours,minutes,seconds, string[128];
 
 		response = json_parse_string(data);
 
-		json_get_string(response, Youtube[playerid][Title], 256, "title");
-		Youtube[playerid][Duration] = json_get_int(response, "length");
-		json_get_string(response, stream, 512, "url");
-		strins(stream, "http:", 0);
+		json_get_string(response, Youtube[index][Title], 256, "title");
+		Youtube[index][Duration] = json_get_int(response, "length");
+		json_get_string(response, Youtube[index][StreamLink], 512, "url");
+		strins(Youtube[index][StreamLink], "http:", 0);
 
 		json_close(response);
 
-		if(Youtube[playerid][Usepos]) GetPlayerPos(playerid, pos[0], pos[1], pos[2]);
-		formatSeconds(Youtube[playerid][Duration],hours,minutes,seconds);
-		
-  		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(playerid),hours,minutes,seconds);
-		SendClientMessage(playerid,-1,string);
+		Youtube[index][Playing] = true;
 
-		PlayAudioStreamForPlayer(playerid, stream, pos[0], pos[1], pos[2], Youtube[playerid][Distance], Youtube[playerid][Usepos]);
-		Youtube[playerid][Playing] = true;
+		formatSeconds(GetVideoDuration(index),hours,minutes,seconds);
+
+		format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),hours,minutes,seconds);
+
+		if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
+		{
+			SendClientMessageToAll(-1, string);
+
+			for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+			{
+				if(IsPlayerConnected(i))
+				{
+					if(Youtube[index][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
+					PlayAudioStreamForPlayer(i, Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
+				}
+			}
+		}
+		else
+		{
+			SendClientMessage(Youtube[index][PlayFor], -1, string);
+
+			if(Youtube[index][UsePos]) GetPlayerPos(Youtube[index][PlayFor], pos[0], pos[1], pos[2]);
+			PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
+		}
 		
-		SetTimerEx("SongFinished",(Youtube[playerid][Duration]+5)*1000,false,"i",playerid);
+		SetTimerEx("SongFinished",(Youtube[index][Duration]+5)*1000,false,"i",index);
 
 	}
 	else
-	{
-		format(error,sizeof(error),"{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d - %s)",data, response_code, GetError(response_code));
-		SendClientMessage(playerid,0xFF0000FF,error);
-	}
+		printf("[ERROR] An error has occured: %s (%d - %s)",data, response_code, GetError(response_code));
 }
 
-public SongFinished(playerid)
+public SongFinished(youtubeid)
 {
-	Youtube[playerid][Playing] = false;
-	Youtube[playerid][Usepos] = false;
-	CallLocalFunction("OnYoutubeVideoFinished","i",playerid);
+	StopYoutubeVideo(youtubeid);
+	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
 }
 
 stock GetError(val)
