@@ -98,7 +98,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	if(response_code == 200)
 	{
 		if (!strcmp(data, "<meta", true, 5))
-			printf("{0049FF}[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
+			printf("[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
 		else
 		{
 			new string[256],Float:pos[3], hours,minutes,seconds, tmp_seconds[8];
@@ -191,7 +191,7 @@ stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
 }
 
-/*stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices = sizeof aExplode, iLength = sizeof aExplode[])
+stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices = sizeof aExplode, iLength = sizeof aExplode[])
 {
 	new
 		iNode,
@@ -215,4 +215,4 @@ stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 		++iNode;
 	}
 	return iPrevious;
-}*/
+}
