@@ -7,7 +7,8 @@
 **The functions PlayYoutubeVideoFor.. depends on which API you use.**
 
 ```PAWN
-native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0) - returns a youtubeid
+native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, (startat = 0,) bool:usepos = false, Float:distance = 50.0) 
+	-> returns a youtubeid
 native StopYoutubeVideo(youtubeid)
 
 native IsValidYoutubeURL(string[])
@@ -20,6 +21,10 @@ native GetVideoLink(youtubeid)
 public OnYoutubeVideoFinished(youtubeid)
 ```
 
+# Requirements
+
+* [SAMPSON](https://github.com/Hual/SAMPSON)
+
 # Installing
 
 First of all you need to choose which API you want. 
@@ -29,19 +34,16 @@ If you have your own dedicated server / vps / any kind then I recommend you make
 
 * Requires nothing extra
 * File: `[MV]_Youtube.inc` 
-* Uses: JSON or no JSON
 
 ## youtubemp3script 
 
 * Requires an **API key** (the key "12345" works so it's default)
 * File: `[MV]_Youtube2.inc`
-* Uses: JSON
 
 ## Your own API
 
 * Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
 * File: `[MV]_YoutubeVPS.inc` 
-* Uses: JSON
 * Notes: You might need to edit the url to match the right one on your vps
 
 Pick one, download it, rename it and just include it in your gamemode like this:
@@ -51,8 +53,6 @@ Pick one, download it, rename it and just include it in your gamemode like this:
 ```
 
 When using the VPS version you'll need to install all the required stuff. 
-
-*You can get JSON for SA:MP here: [SAMPSON](https://github.com/Hual/SAMPSON)*
 
 # Images
 <img src="http://puu.sh/oRnMo.jpg" />

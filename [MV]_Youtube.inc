@@ -6,15 +6,11 @@ Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
 Michael@Belgium - [MV]_Youtube
 */
 
-#define USE_JSON	true 		//do you have SAMPSON ?
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_INDEX	-1
 
 #include <a_http>
-
-#if USE_JSON
-	#include <a_json>
-#endif
+#include <a_json>
 
 enum e_ytv
 {
@@ -64,11 +60,7 @@ stock DownloadSong(id, youtubelink[], startat)
 	if(strfind(youtubelink,"&") != -1) strmid(youtubelink,youtubelink,0,strfind(youtubelink,"&"), 128);
 	format(Youtube[id][Link],256,"%s",youtubelink);
 
-	#if USE_JSON
-		format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
-	#else
-		format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=text&video=%s&start=%i",Youtube[id][Link],startat);
-	#endif
+	format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
 	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
 }
 
@@ -98,37 +90,21 @@ public OnYoutubeResponse(index, response_code, data[])
 	if(response_code == 200)
 	{
 		if (!strcmp(data, "<meta", true, 5))
-			printf("[ERROR] {00c9ff}An error has occured: %s (%d)",GetError(response_code),response_code);
+			printf("[ERROR] An error has occured: %s (%d)",GetError(response_code),response_code);
 		else
 		{
-			new string[256],Float:pos[3], hours,minutes,seconds, tmp_seconds[8];
+			new JSONNode:response, string[256],Float:pos[3], hours,minutes,seconds, tmp_seconds[8];
 
-			#if USE_JSON
-				new JSONNode:response;
+			response = json_parse_string(data);
+			json_get_string(response, Youtube[index][Title], 256, "title");
+			json_get_string(response, tmp_seconds, 8, "length");
+			json_get_string(response, Youtube[index][StreamLink], 256, "link");
+			json_close(response);
 
-				response = json_parse_string(data);
-				json_get_string(response, Youtube[index][Title], 256, "title");
-				json_get_string(response, tmp_seconds, 8, "length");
-				json_get_string(response, Youtube[index][StreamLink], 256, "link");
-				json_close(response);
-
-				Youtube[index][Duration] = strval(tmp_seconds);
-			#else
-				new content[3][256];
-
-				explode(content,data,"<br/>");
-
-				strmid(Youtube[index][Title], content[0], 7, strlen(content[0]), 256);
-				strmid(tmp_seconds,content[1],8,strlen(content[1]));
-				strmid(Youtube[index][StreamLink],content[2],6,strlen(content[2]));
-
-				Youtube[index][Duration] = strval(tmp_seconds);
-			#endif
-
+			Youtube[index][Duration] = strval(tmp_seconds);
 			Youtube[index][Playing] = true;
 
 			formatSeconds(GetVideoDuration(index),hours,minutes,seconds);
-
 			format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),hours,minutes,seconds);
 
 			if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
