@@ -66,6 +66,17 @@ stock DownloadSong(id, youtubelink[])
 stock StopYoutubeVideo(youtubeid)	
 {
 	Youtube[youtubeid][Playing] = false;
+
+	if(Youtube[youtubeid][PlayFor] == INVALID_PLAYER_ID)
+	{
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		{
+			if(!IsPlayerConnected(i)) continue;
+			StopAudioStreamForPlayer(i);
+		}
+	}
+	else
+		StopAudioStreamForPlayer(Youtube[youtubeid][PlayFor]);
 }
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];

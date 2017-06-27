@@ -67,6 +67,17 @@ stock DownloadSong(id, youtubelink[], startat)
 stock StopYoutubeVideo(youtubeid)	
 {
 	Youtube[youtubeid][Playing] = false;
+
+	if(Youtube[youtubeid][PlayFor] == INVALID_PLAYER_ID)
+	{
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		{
+			if(!IsPlayerConnected(i)) continue;
+			StopAudioStreamForPlayer(i);
+		}
+	}
+	else
+		StopAudioStreamForPlayer(Youtube[youtubeid][PlayFor]);
 }
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];
@@ -165,30 +176,4 @@ stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 	hours_left = seconds/60/60;
 	minutes_left = (seconds - hours_left*60*60)/60;
 	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
-}
-
-stock explode(aExplode[][], const sSource[], const sDelimiter[] = " ", iVertices = sizeof aExplode, iLength = sizeof aExplode[])
-{
-	new
-		iNode,
-		iPointer,
-		iPrevious = -1,
-		iDelimiter = strlen(sDelimiter);
-
-	while(iNode < iVertices)
-	{
-		iPointer = strfind(sSource, sDelimiter, false, iPointer);
-
-		if(iPointer == -1)
-		{
-			strmid(aExplode[iNode], sSource, iPrevious, strlen(sSource), iLength);
-			break;
-		}
-		else
-			strmid(aExplode[iNode], sSource, iPrevious, iPointer, iLength);
-
-		iPrevious = (iPointer += iDelimiter);
-		++iNode;
-	}
-	return iPrevious;
 }
