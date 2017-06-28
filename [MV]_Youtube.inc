@@ -1,16 +1,20 @@
-/*
-Credits:
+#include <a_http>
+#include <a_json>
 
-YoutubeInMP3 - API - http://youtubeinmp3.com/api/
-Westie - strlib: explode() - http://forum.sa-mp.com/showthread.php?t=85697
-Michael@Belgium - [MV]_Youtube
+#define USE_VERSION			1
+
+/*
+	0 = YoutubeInMP3
+	1 = youtubemp3script
+	2 = VPS api
 */
 
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_INDEX	-1
 
-#include <a_http>
-#include <a_json>
+#if USE_VERSION == 1
+#define API_KEY				"12345"
+#endif
 
 enum e_ytv
 {
@@ -30,18 +34,47 @@ forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnYoutubeResponse(index, response_code, data[]);
 
+#if USE_VERSION == 0
+
 stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
 {
-	new id = GetFreeIndex();
+	new id = GetFreeIndex(), requestlink[128];
 
 	Youtube[id][PlayFor] = playfor;
 	Youtube[id][Distance] = distance;
 	Youtube[id][UsePos] = usepos;
 
-	DownloadSong(id, url, startat);
+	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+	format(Youtube[id][Link],256,"%s",url);
 
+	format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
+	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
 	return id;
 }
+
+#else
+
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0)
+{
+	new id = GetFreeIndex(), requestlink[128];
+
+	Youtube[id][PlayFor] = playfor;
+	Youtube[id][Distance] = distance;
+	Youtube[id][UsePos] = usepos;
+
+	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+	format(Youtube[id][Link],256,"%s",url);
+
+	#if USE_VERSION == 1
+	format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
+	#else
+	format(requestlink,sizeof(requestlink),"lmdm.exp-gaming.net/ucp/ytconverter/convert.php?youtubelink=%s",Youtube[id][Link]);
+	#endif
+	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+	return id;
+}
+
+#endif
 
 stock GetFreeIndex()
 {
@@ -51,17 +84,6 @@ stock GetFreeIndex()
 	}
 
 	return INVALID_YT_INDEX;
-}
-
-stock DownloadSong(id, youtubelink[], startat)
-{
-	new requestlink[128];
-
-	if(strfind(youtubelink,"&") != -1) strmid(youtubelink,youtubelink,0,strfind(youtubelink,"&"), 128);
-	format(Youtube[id][Link],256,"%s",youtubelink);
-
-	format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
-	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
 }
 
 stock StopYoutubeVideo(youtubeid)	
@@ -98,52 +120,96 @@ stock GetVideoLink(youtubeid)
 
 public OnYoutubeResponse(index, response_code, data[])
 {
-	if(response_code == 200)
+	if(response_code != 200)
 	{
-		if (!strcmp(data, "<meta", true, 5))
-			printf("[ERROR] An error has occured: %s (%d)",GetError(response_code),response_code);
-		else
+		printf("[ERROR] An error has occured: %d - %s",response_code, GetError(response_code));
+		return 0;
+	}
+
+	print(data);
+	
+	#if USE_VERSION == 0
+	if (!strcmp(data, "<meta", true, 5))
+	{
+		response_code = 7;
+		printf("[ERROR] An error has occured: %s (%d)",GetError(response_code),response_code);
+		return 0;
+	}
+	#endif
+
+	new JSONNode:response, string[256],Float:pos[3], time[3];
+
+	response = json_parse_string(data);
+
+	#if USE_VERSION == 2
+	if(json_get_bool(response, "error"))
+	{
+		json_get_string(response, string, sizeof(string), "type");
+		printf("[ERROR] An error has occured: %s", string);
+		return 0;
+	}
+
+	json_get_string(response, Youtube[index][Title], 256, "title");
+	Youtube[index][Duration] = json_get_int(response, "duration");
+	json_get_string(response, Youtube[index][StreamLink], 512, "file");
+
+	#elseif USE_VERSION == 1
+	new status[8];
+
+	json_get_string(response, status, sizeof(status), "status");
+
+	if(!strcmp(status, "error", true))
+	{
+		json_get_string(response, string, sizeof(string), "message");
+		printf("[ERROR] An error has occured: %s", string);
+		return 0;
+	}
+
+	json_get_string(response, Youtube[index][Title], 256, "title");
+	Youtube[index][Duration] = json_get_int(response, "length");
+	json_get_string(response, Youtube[index][StreamLink], 512, "url");
+	strins(Youtube[index][StreamLink], "http:", 0);
+	
+	#else 
+	new tmp_seconds[8];
+
+	json_get_string(response, Youtube[index][Title], 256, "title");
+	json_get_string(response, tmp_seconds, 8, "length");
+	json_get_string(response, Youtube[index][StreamLink], 256, "link");
+
+	Youtube[index][Duration] = strval(tmp_seconds);
+	
+	#endif
+	json_close(response);
+
+	Youtube[index][Playing] = true;
+
+	formatSeconds(GetVideoDuration(index),time[0],time[1],time[2]);
+	format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),time[0],time[1],time[2]);
+
+	if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
+	{
+		SendClientMessageToAll(-1, string);
+
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 		{
-			new JSONNode:response, string[256],Float:pos[3], hours,minutes,seconds, tmp_seconds[8];
-
-			response = json_parse_string(data);
-			json_get_string(response, Youtube[index][Title], 256, "title");
-			json_get_string(response, tmp_seconds, 8, "length");
-			json_get_string(response, Youtube[index][StreamLink], 256, "link");
-			json_close(response);
-
-			Youtube[index][Duration] = strval(tmp_seconds);
-			Youtube[index][Playing] = true;
-
-			formatSeconds(GetVideoDuration(index),hours,minutes,seconds);
-			format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),hours,minutes,seconds);
-
-			if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
+			if(IsPlayerConnected(i))
 			{
-				SendClientMessageToAll(-1, string);
-
-				for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
-				{
-					if(IsPlayerConnected(i))
-					{
-						if(Youtube[index][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
-						PlayAudioStreamForPlayer(i, Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-					}
-				}
+				if(Youtube[index][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
+				PlayAudioStreamForPlayer(i, Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
 			}
-			else
-			{
-				SendClientMessage(Youtube[index][PlayFor], -1, string);
-
-				if(Youtube[index][UsePos]) GetPlayerPos(Youtube[index][PlayFor], pos[0], pos[1], pos[2]);
-				PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-			}
-			
-			SetTimerEx("SongFinished",(Youtube[index][Duration]+5)*1000,false,"i",index);
 		}
 	}
 	else
-		printf("[ERROR] An error has occured: %s (%d - %s)",data, response_code, GetError(response_code));
+	{
+		SendClientMessage(Youtube[index][PlayFor], -1, string);
+
+		if(Youtube[index][UsePos]) GetPlayerPos(Youtube[index][PlayFor], pos[0], pos[1], pos[2]);
+		PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
+	}
+	
+	SetTimerEx("SongFinished",(Youtube[index][Duration]+5)*1000,false,"i",index);
+	return 1;
 }
 
 public SongFinished(youtubeid)

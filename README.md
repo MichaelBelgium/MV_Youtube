@@ -27,32 +27,33 @@ public OnYoutubeVideoFinished(youtubeid)
 
 # Installing
 
-First of all you need to choose which API you want. 
-If you have your own dedicated server / vps / any kind then I recommend you make your own API (or use mine, but I doubt thats smart as it uses my links to my server).
-
-## YoutubeInMP3 
-
-* Requires nothing extra
-* File: `[MV]_Youtube.inc` 
-
-## youtubemp3script 
-
-* Requires an **API key** (the key "12345" works so it's default)
-* File: `[MV]_Youtube2.inc`
-
-## Your own API
-
-* Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
-* File: `[MV]_YoutubeVPS.inc` 
-* Notes: You might need to edit the url to match the right one on your vps
-
-Pick one, download it, rename it and just include it in your gamemode like this:
+By just doing this you're ready to roll.
 
 ```pawn
 #include <[MV]_Youtube>
 ```
 
-When using the VPS version you'll need to install all the required stuff. 
+## Settings
+
+First of all you need to choose which API you want. Default is youtubemp3script.
+If you have your own dedicated server / vps / any kind then I recommend you make your own API (or use mine, but I doubt thats smart as it uses my links to my server).
+
+```PAWN
+#define USE_VERSION			1
+```
+
+### 0: YoutubeInMP3 
+
+* Requires nothing extra
+
+### 1: youtubemp3script 
+
+* Requires an **API key** (the key "12345" works so it's default)
+
+### 2: Your own API
+
+* Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
+* Notes: You might need to edit the requesturl in the include to match the one from your vps.
 
 # Images
 <img src="http://puu.sh/oRnMo.jpg" />

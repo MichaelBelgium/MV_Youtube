@@ -1,14 +1,7 @@
-// This is a comment
-// uncomment the line below if you want to write a filterscript
-//#define FILTERSCRIPT
-
 #include <a_samp>
 #include <zcmd>
 #include <sscanf2>
-#include <[MV]_Youtube2>
-//or
-//#include <[MV]_Youtube>
-//#include <[MV]_YoutubeVPS>
+#include <[MV]_Youtube>
 
 new gYoutubeID[MAX_PLAYERS], gYoutubeIDForAll;
 
@@ -76,16 +69,17 @@ public OnYoutubeVideoFinished(youtubeid)
 		format(string, sizeof(string), "The song that played for everyone (%s) has finished. Execute /playforall to play another song.", GetVideoTitle(youtubeid));
 		SendClientMessageToAll(-1, string);
 	}
-	
-	for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+	else
 	{
-		if(gYoutubeID[i] == youtubeid)
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 		{
-			format(string, sizeof(string), "The song that played for you (%s) has finished. Execute /playforme to play another song.", GetVideoTitle(youtubeid));
-			SendClientMessage(i, -1, string);
-			break;
+			if(gYoutubeID[i] == youtubeid)
+			{
+				format(string, sizeof(string), "The song that played for you (%s) has finished. Execute /playforme to play another song.", GetVideoTitle(youtubeid));
+				SendClientMessage(i, -1, string);
+				break;
+			}
 		}
 	}
-
 	return 1;
 }
