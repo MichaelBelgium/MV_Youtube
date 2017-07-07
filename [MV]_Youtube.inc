@@ -25,7 +25,8 @@ enum e_ytv
 	StreamLink[256],
 	PlayFor,
 	Float:Distance,
-	bool:UsePos
+	bool:UsePos,
+	Timer
 };
 
 new Youtube[MAX_YOUTUBE_SAVES][e_ytv];
@@ -89,6 +90,7 @@ stock GetFreeIndex()
 stock StopYoutubeVideo(youtubeid)	
 {
 	Youtube[youtubeid][Playing] = false;
+	KillTimer(Youtube[youtubeid][Timer]);
 
 	if(Youtube[youtubeid][PlayFor] == INVALID_PLAYER_ID)
 	{
@@ -126,8 +128,6 @@ public OnYoutubeResponse(index, response_code, data[])
 		return 0;
 	}
 
-	print(data);
-	
 	#if USE_VERSION == 0
 	if (!strcmp(data, "<meta", true, 5))
 	{
@@ -208,7 +208,7 @@ public OnYoutubeResponse(index, response_code, data[])
 		PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
 	}
 	
-	SetTimerEx("SongFinished",(Youtube[index][Duration]+5)*1000,false,"i",index);
+	Youtube[index][Timer] = SetTimerEx("SongFinished",GetVideoDuration(index)*1000,false,"i",index);
 	return 1;
 }
 
