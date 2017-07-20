@@ -14,11 +14,15 @@
 
 #if USE_VERSION == 1
 #define API_KEY				"12345"
+#elseif USE_VERSION == 2
+#define CONVERTER_PATH		"lmdm.exp-gaming.net/ucp/ytconverter"
+#define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
 #endif
 
 enum e_ytv
 {
 	bool:Playing,
+	ytID[16],
 	Duration,
 	Title[256],
 	Link[256],
@@ -69,7 +73,8 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = fals
 	#if USE_VERSION == 1
 	format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
 	#else
-	format(requestlink,sizeof(requestlink),"lmdm.exp-gaming.net/ucp/ytconverter/convert.php?youtubelink=%s",Youtube[id][Link]);
+	strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
+	format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
 	#endif
 	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
 	return id;
@@ -103,6 +108,7 @@ stock StopYoutubeVideo(youtubeid)
 	else
 		StopAudioStreamForPlayer(Youtube[youtubeid][PlayFor]);
 }
+
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];
 stock GetVideoDuration(youtubeid)			return Youtube[youtubeid][Duration];
@@ -142,6 +148,22 @@ public OnYoutubeResponse(index, response_code, data[])
 	response = json_parse_string(data);
 
 	#if USE_VERSION == 2
+
+	if(index == 9999)
+	{
+		if(json_get_bool(response, "error"))
+		{
+			json_get_string(response, string, sizeof(string), "type");
+			printf("[ERROR] An error has occured: %s", string);
+		}
+		else
+		{
+			json_get_string(response, string, sizeof(string), "message");
+			printf("Downloaded song: %s",string);
+		}
+		return 0;
+	}
+
 	if(json_get_bool(response, "error"))
 	{
 		json_get_string(response, string, sizeof(string), "type");
@@ -209,12 +231,22 @@ public OnYoutubeResponse(index, response_code, data[])
 	}
 	
 	Youtube[index][Timer] = SetTimerEx("SongFinished",GetVideoDuration(index)*1000,false,"i",index);
+	
 	return 1;
 }
 
 public SongFinished(youtubeid)
 {
 	StopYoutubeVideo(youtubeid);
+
+	#if USE_VERSION == 2
+		#if REMOVE_ON_FINISHED
+		new string[128];
+		format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
+		HTTP(9999, HTTP_GET, string, "", "OnYoutubeResponse");
+		#endif
+	#endif
+
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
 }
 
