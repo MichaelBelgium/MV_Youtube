@@ -126,6 +126,13 @@ stock GetVideoLink(youtubeid)
     return str;
 }
 
+stock GetVideoStreamLink(youtubeid)
+{
+	new str[256];
+	strins(str, Youtube[youtubeid][StreamLink], 0);
+	return str;
+}
+
 public OnYoutubeResponse(index, response_code, data[])
 {
 	if(response_code != 200)
