@@ -17,8 +17,11 @@ native IsYouTubeVideoPlaying(youtubeid)
 native GetVideoDuration(youtubeid)
 native GetVideoTitle(youtubeid)
 native GetVideoLink(youtubeid)
+native GetVideoStreamLink(youtubeid)
+native GetVideoTarget(youtubeid)
 
 public OnYoutubeVideoFinished(youtubeid)
+public OnYoutubeDownloadError(youtubeid, message[])
 ```
 
 # Requirements
