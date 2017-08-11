@@ -38,6 +38,7 @@ new Youtube[MAX_YOUTUBE_SAVES][e_ytv];
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnYoutubeResponse(index, response_code, data[]);
+forward OnYoutubeDownloadError(youtubeid, message[]);
 
 #if USE_VERSION == 0
 
@@ -133,11 +134,16 @@ stock GetVideoStreamLink(youtubeid)
 	return str;
 }
 
+stock GetVideoTarget(youtubeid) return youtubeid == INVALID_YT_INDEX ? -1 : Youtube[youtubeid][PlayFor];
+
 public OnYoutubeResponse(index, response_code, data[])
 {
+	new string[256];
+
 	if(response_code != 200)
 	{
-		printf("[ERROR] An error has occured: %d - %s",response_code, GetError(response_code));
+		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		return 0;
 	}
 
@@ -145,12 +151,13 @@ public OnYoutubeResponse(index, response_code, data[])
 	if (!strcmp(data, "<meta", true, 5))
 	{
 		response_code = 7;
-		printf("[ERROR] An error has occured: %s (%d)",GetError(response_code),response_code);
+		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		return 0;
 	}
 	#endif
 
-	new JSONNode:response, string[256],Float:pos[3], time[3];
+	new JSONNode:response, Float:pos[3], time[3];
 
 	response = json_parse_string(data);
 
@@ -161,7 +168,7 @@ public OnYoutubeResponse(index, response_code, data[])
 		if(json_get_bool(response, "error"))
 		{
 			json_get_string(response, string, sizeof(string), "type");
-			printf("[ERROR] An error has occured: %s", string);
+			CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		}
 		else
 		{
@@ -174,7 +181,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	if(json_get_bool(response, "error"))
 	{
 		json_get_string(response, string, sizeof(string), "type");
-		printf("[ERROR] An error has occured: %s", string);
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		return 0;
 	}
 
@@ -190,7 +197,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	if(!strcmp(status, "error", true))
 	{
 		json_get_string(response, string, sizeof(string), "message");
-		printf("[ERROR] An error has occured: %s", string);
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		return 0;
 	}
 

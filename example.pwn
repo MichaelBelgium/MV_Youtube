@@ -83,3 +83,16 @@ public OnYoutubeVideoFinished(youtubeid)
 	}
 	return 1;
 }
+
+public OnYoutubeDownloadError(youtubeid, message[])
+{
+	new string[256], player = GetVideoTarget(youtubeid);
+
+	format(string, sizeof(string), "An error has occured while downloading video %s: %s", GetVideoLink(youtubeid), message);
+	
+	if(player != INVALID_PLAYER_ID)
+		SendClientMessage(player, 0xAA3333AA, string);
+	else
+		SendClientMessageToAll(0xAA3333AA, string);
+	return 1;
+}
