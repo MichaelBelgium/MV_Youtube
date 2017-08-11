@@ -10,7 +10,7 @@
 */
 
 #define MAX_YOUTUBE_SAVES	50
-#define INVALID_YT_INDEX	-1
+#define INVALID_YT_ID		-1
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
@@ -100,7 +100,7 @@ stock GetFreeIndex()
 		if(!Youtube[i][Playing]) return i;
 	}
 
-	return INVALID_YT_INDEX;
+	return INVALID_YT_ID;
 }
 
 stock StopYoutubeVideo(youtubeid)	
@@ -121,7 +121,7 @@ stock StopYoutubeVideo(youtubeid)
 }
 
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
-stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];
+stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_ID ? false : Youtube[youtubeid][Playing];
 stock GetVideoDuration(youtubeid)			return Youtube[youtubeid][Duration];
 stock GetVideoTitle(youtubeid) 
 {
@@ -144,7 +144,7 @@ stock GetVideoStreamLink(youtubeid)
 	return str;
 }
 
-stock GetVideoTarget(youtubeid) return youtubeid == INVALID_YT_INDEX ? -1 : Youtube[youtubeid][PlayFor];
+stock GetVideoTarget(youtubeid) return youtubeid == INVALID_YT_ID ? -1 : Youtube[youtubeid][PlayFor];
 
 stock CreatePlaylist(name[])
 {
