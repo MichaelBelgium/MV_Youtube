@@ -11,6 +11,7 @@
 
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_INDEX	-1
+#define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
 #if USE_VERSION == 1
@@ -144,6 +145,25 @@ stock GetVideoStreamLink(youtubeid)
 }
 
 stock GetVideoTarget(youtubeid) return youtubeid == INVALID_YT_INDEX ? -1 : Youtube[youtubeid][PlayFor];
+
+stock CreatePlaylist(name[])
+{
+	for(new i = 0; i < MAX_PLAYLISTS; i++)
+	{
+		if(Playlist[i][Active]) continue;
+		Playlist[i][Active] = true;
+		format(Playlist[i][Name], 32, "%s", name);
+		break;
+	}
+	return INVALID_PLAYLIST_ID;
+}
+
+stock GetPlaylistName(playlistid)
+{
+	new str[32];
+	strins(str, Playlist[playlistid][Name], 0);
+	return str;
+}
 
 public OnYoutubeResponse(index, response_code, data[])
 {
