@@ -11,6 +11,7 @@
 
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_INDEX	-1
+#define MAX_PLAYLISTS		5
 
 #if USE_VERSION == 1
 #define API_KEY				"12345"
@@ -34,6 +35,14 @@ enum e_ytv
 };
 
 new Youtube[MAX_YOUTUBE_SAVES][e_ytv];
+
+enum e_plist
+{
+    bool:Active,
+    Name[32]
+};
+
+new Playlist[MAX_PLAYLISTS][e_plist];
 
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
