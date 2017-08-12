@@ -7,7 +7,7 @@
 **The functions PlayYoutubeVideoFor.. depends on which API you use.**
 
 ```PAWN
-native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, (startat = 0,) bool:usepos = false, Float:distance = 50.0) 
+native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, (startat = 0,) bool:usepos = false, Float:distance = 50.0) 
 	-> returns a youtubeid
 native StopYoutubeVideo(youtubeid)
 
@@ -20,8 +20,19 @@ native GetVideoLink(youtubeid)
 native GetVideoStreamLink(youtubeid)
 native GetVideoTarget(youtubeid)
 
+native CreatePlaylist(name[])
+	-> returns a playlistid
+native RemovePlaylist(playlistid)
+native GetPlaylistName(playlistid)
+native GetPlaylistSongs(playlistid)
+native GetPlaylistSongsCount(playlistid)
+native GetPlaylistFromVideo(youtubeid)
+
+public OnYoutubeVideoStart(youtubeid)
 public OnYoutubeVideoFinished(youtubeid)
 public OnYoutubeDownloadError(youtubeid, message[])
+public OnPlaylistAddEntry(playerlistid, youtubeid);
+public OnPlaylistFinished(playlistid);
 ```
 
 # Requirements
