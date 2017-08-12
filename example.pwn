@@ -78,6 +78,44 @@ CMD:addtoglobalplaylist(playerid,params[])
 	return 1;
 }
 
+CMD:myplaylist(playerid,params[])
+{
+	if(gMyPlaylist[playerid] == INVALID_PLAYLIST_ID) return SendClientMessage(playerid, COLOR_RED, "You don't have a playlist");
+
+	new songs[MAX_YOUTUBE_SAVES], string[128], plist[256*5];
+	songs = GetPlaylistSongs(gMyPlaylist[playerid]);
+
+	strcat(plist, "Entry\tSong\tDuration\n");
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(songs[i] == INVALID_YT_ID) continue;
+		format(string, sizeof(string), "%i\t%s\t%i seconds\n", i+1, GetVideoTitle(songs[i]), GetVideoDuration(songs[i]));
+		strcat(plist, string);
+	}
+
+	ShowPlayerDialog(playerid, 0, DIALOG_STYLE_TABLIST_HEADERS, GetPlaylistName(gMyPlaylist[playerid]), plist, "OK", "");
+	return 1;
+}
+
+CMD:globalplaylist(playerid,params[])
+{
+	new songs[MAX_YOUTUBE_SAVES], string[128], plist[256*5];
+	songs = GetPlaylistSongs(gEveryonesPlaylist);
+
+	strcat(plist, "Entry\tSong\tDuration\n");
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(songs[i] == INVALID_YT_ID) continue;
+		format(string, sizeof(string), "%i\t%s\t%i seconds\n", i+1, GetVideoTitle(songs[i]), GetVideoDuration(songs[i]));
+		strcat(plist, string);
+	}
+
+	ShowPlayerDialog(playerid, 0, DIALOG_STYLE_TABLIST_HEADERS, GetPlaylistName(gEveryonesPlaylist), plist, "OK", "");
+	return 1;
+}
+
 // =========== NO PLAYLISTS ===============
 
 CMD:playforme(playerid,params[])
@@ -184,6 +222,18 @@ public OnPlaylistFinished(playlistid)
 			}
 		}
 	}
+	return 1;
+}
+
+public OnPlaylistAddEntry(playerlistid, youtubeid)
+{
+	new string[128];
+	format(string, sizeof(string), "{0049FF}[Playlist '%s'] {00c9ff}Added song '%s' (%i) ",GetPlaylistName(playerlistid),  GetVideoTitle(youtubeid), youtubeid);
+
+	if(GetVideoTarget(youtubeid) == INVALID_PLAYER_ID)
+		SendClientMessageToAll(-1, string);
+	else
+		SendClientMessage(GetVideoTarget(youtubeid) , -1, string);
 	return 1;
 }
 
