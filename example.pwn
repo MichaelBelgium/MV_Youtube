@@ -61,8 +61,8 @@ CMD:addtomyplaylist(playerid,params[])
 {
 	new song[256];
 	if(gMyPlaylist[playerid] == INVALID_PLAYLIST_ID) return SendClientMessage(playerid, COLOR_RED, "You don't have a playlist");
-	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, -1, "Usage: /addtomyplaylist [youtube url]");
-	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, -1, "Invalid url.");
+	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, COLOR_RED, "Usage: /addtomyplaylist [youtube url]");
+	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, COLOR_RED, "Invalid url.");
 
 	PlayYoutubeVideoFor(song, playerid, gMyPlaylist[playerid]);
 	return 1;
@@ -71,8 +71,8 @@ CMD:addtomyplaylist(playerid,params[])
 CMD:addtoglobalplaylist(playerid,params[])
 {
 	new song[256];
-	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, -1, "Usage: /addtoglobalplaylist [youtube url]");
-	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, -1, "Invalid url.");
+	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, COLOR_RED, "Usage: /addtoglobalplaylist [youtube url]");
+	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, COLOR_RED, "Invalid url.");
 
 	PlayYoutubeVideoFor(song, playerid, gEveryonesPlaylist);
 	return 1;
@@ -83,9 +83,9 @@ CMD:addtoglobalplaylist(playerid,params[])
 CMD:playforme(playerid,params[])
 {
 	new song[256];
-	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, -1, "Usage: /playforme [youtube url]");
-	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, -1, "Invalid url.");
-	if(IsYouTubeVideoPlaying(gYoutubeID[playerid])) return SendClientMessage(playerid, -1, "A song is already playing.");
+	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, COLOR_RED, "Usage: /playforme [youtube url]");
+	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, COLOR_RED, "Invalid url.");
+	if(IsYouTubeVideoPlaying(gYoutubeID[playerid])) return SendClientMessage(playerid, COLOR_RED, "A song is already playing.");
 
 	gYoutubeID[playerid] = PlayYoutubeVideoFor(song, playerid);
 	return 1;
@@ -94,9 +94,9 @@ CMD:playforme(playerid,params[])
 CMD:playforall(playerid,params[])
 {
 	new song[256];
-	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, -1, "Usage: /playforall [youtube url]");
-	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, -1, "Invalid url.");
-	if(IsYouTubeVideoPlaying(gYoutubeIDForAll)) return SendClientMessage(playerid, -1, "A song is already playing.");
+	if(sscanf(params, "s[256]", song)) return SendClientMessage(playerid, COLOR_RED, "Usage: /playforall [youtube url]");
+	if(!IsValidYoutubeURL(song)) return SendClientMessage(playerid, COLOR_RED, "Invalid url.");
+	if(IsYouTubeVideoPlaying(gYoutubeIDForAll)) return SendClientMessage(playerid, COLOR_RED, "A song is already playing.");
 
 	gYoutubeIDForAll = PlayYoutubeVideoFor(song);
 	return 1;
