@@ -50,6 +50,7 @@ forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnYoutubeResponse(index, response_code, data[]);
 forward OnYoutubeDownloadError(youtubeid, message[]);
+forward OnPlaylistAddEntry(playerlistid, youtubeid);
 
 #if USE_VERSION == 0
 
@@ -163,7 +164,6 @@ stock CreatePlaylist(name[])
 		if(Playlist[i][Active]) continue;
 		Playlist[i][Active] = true;
 		format(Playlist[i][Name], 32, "%s", name);
-		printf("[Debug] Created playlist %i: %s", i, Playlist[i][Name]);
 		return i;
 	}
 
@@ -190,6 +190,19 @@ stock GetPlaylistSongs(playlistid)
 		pointer++;
 	}
 	return songs;
+}
+
+stock GetPlaylistSongsCount(playlistid)
+{
+	new count = 0;
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(Youtube[i][PlaylistID] != playlistid) continue;
+		count++;
+	}
+
+	return count;
 }
 
 public OnYoutubeResponse(index, response_code, data[])
@@ -271,8 +284,10 @@ public OnYoutubeResponse(index, response_code, data[])
 
 	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
 	{
-		printf("Added song %i (%s) to playlist %s", index, GetVideoTitle(index), GetPlaylistName(Youtube[index][PlaylistID]));
-		return 0;
+		CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
+
+		if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) != 1)
+			return 0;
 	}
 
 	Youtube[index][Playing] = true;
@@ -302,7 +317,6 @@ public OnYoutubeResponse(index, response_code, data[])
 	}
 	
 	Youtube[index][Timer] = SetTimerEx("SongFinished",GetVideoDuration(index)*1000,false,"i",index);
-	
 	return 1;
 }
 
@@ -317,6 +331,12 @@ public SongFinished(youtubeid)
 		HTTP(9999, HTTP_GET, string, "", "OnYoutubeResponse");
 		#endif
 	#endif
+
+	if(Youtube[youtubeid][PlaylistID] != INVALID_PLAYLIST_ID)
+	{
+		Youtube[youtubeid][PlaylistID] = INVALID_PLAYLIST_ID;
+		//play next	
+	}
 
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
 }
@@ -349,10 +369,8 @@ stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 
 public OnGameModeInit()
 {
-	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
-	{
-		Youtube[i][PlaylistID] = INVALID_PLAYLIST_ID;
-	}
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)	Youtube[i][PlaylistID] = INVALID_PLAYLIST_ID;
+
 	#if defined MV_OnGameModeInit
 		return MV_OnGameModeInit();
 	#else
