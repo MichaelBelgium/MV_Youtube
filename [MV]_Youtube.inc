@@ -30,6 +30,7 @@ enum e_ytv
 	Link[256],
 	StreamLink[256],
 	PlayFor,
+	PlaylistID,
 	Float:Distance,
 	bool:UsePos,
 	Timer
@@ -52,16 +53,16 @@ forward OnYoutubeDownloadError(youtubeid, message[]);
 
 #if USE_VERSION == 0
 
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
 {
 	new id = GetFreeIndex(), requestlink[128];
 
 	if(id != INVALID_YT_ID)
 	{
-
 		Youtube[id][PlayFor] = playfor;
 		Youtube[id][Distance] = distance;
 		Youtube[id][UsePos] = usepos;
+		Youtube[id][PlaylistID] = playlist;
 
 		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
 		format(Youtube[id][Link],256,"%s",url);
@@ -74,7 +75,7 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, startat = 0, bool:
 
 #else
 
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0)
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
 	new id = GetFreeIndex(), requestlink[128];
 
@@ -83,6 +84,7 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = fals
 		Youtube[id][PlayFor] = playfor;
 		Youtube[id][Distance] = distance;
 		Youtube[id][UsePos] = usepos;
+		Youtube[id][PlaylistID] = playlist;
 
 		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
 		format(Youtube[id][Link],256,"%s",url);
@@ -104,7 +106,7 @@ stock GetFreeIndex()
 {
 	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
 	{
-		if(!Youtube[i][Playing]) return i;
+		if(!Youtube[i][Playing] && Youtube[i][PlaylistID] == INVALID_PLAYLIST_ID) return i;
 	}
 
 	print("[Warning] MV_Youtube: MAX_YOUTUBE_SAVES reached!");
@@ -174,6 +176,20 @@ stock GetPlaylistName(playlistid)
 	new str[32];
 	strins(str, Playlist[playlistid][Name], 0);
 	return str;
+}
+
+stock GetPlaylistSongs(playlistid)
+{
+	new songs[MAX_YOUTUBE_SAVES], pointer = 0;
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++) songs[i] = INVALID_YT_ID;
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(Youtube[i][PlaylistID] != playlistid) continue;
+		songs[pointer] = i;
+		pointer++;
+	}
+	return songs;
 }
 
 public OnYoutubeResponse(index, response_code, data[])
@@ -253,6 +269,12 @@ public OnYoutubeResponse(index, response_code, data[])
 	#endif
 	json_close(response);
 
+	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
+	{
+		printf("Added song %i (%s) to playlist %s", index, GetVideoTitle(index), GetPlaylistName(Youtube[index][PlaylistID]));
+		return 0;
+	}
+
 	Youtube[index][Playing] = true;
 
 	formatSeconds(GetVideoDuration(index),time[0],time[1],time[2]);
@@ -324,3 +346,26 @@ stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 	minutes_left = (seconds - hours_left*60*60)/60;
 	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
 }
+
+public OnGameModeInit()
+{
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		Youtube[i][PlaylistID] = INVALID_PLAYLIST_ID;
+	}
+	#if defined MV_OnGameModeInit
+		return MV_OnGameModeInit();
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnGameModeInit
+	#undef OnGameModeInit
+#else
+	#define _ALS_OnGameModeInit
+#endif
+
+#define OnGameModeInit MV_OnGameModeInit
+#if defined MV_OnGameModeInit
+	forward MV_OnGameModeInit();
+#endif
