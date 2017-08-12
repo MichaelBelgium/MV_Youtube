@@ -205,6 +205,39 @@ stock GetPlaylistSongsCount(playlistid)
 	return count;
 }
 
+PlayYoutubeVideo(youtubeid) //shouldn't use this function outside of the include.
+{
+	new Float:pos[3], time[3], string[256];
+
+	Youtube[youtubeid][Playing] = true;
+
+	formatSeconds(GetVideoDuration(youtubeid),time[0],time[1],time[2]);
+	format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(youtubeid),time[0],time[1],time[2]);
+
+	if(Youtube[youtubeid][PlayFor] == INVALID_PLAYER_ID)
+	{
+		SendClientMessageToAll(-1, string);
+
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		{
+			if(IsPlayerConnected(i))
+			{
+				if(Youtube[youtubeid][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
+				PlayAudioStreamForPlayer(i, Youtube[youtubeid][StreamLink], pos[0], pos[1], pos[2], Youtube[youtubeid][Distance], Youtube[youtubeid][UsePos]);
+			}
+		}
+	}
+	else
+	{
+		SendClientMessage(Youtube[youtubeid][PlayFor], -1, string);
+
+		if(Youtube[youtubeid][UsePos]) GetPlayerPos(Youtube[youtubeid][PlayFor], pos[0], pos[1], pos[2]);
+		PlayAudioStreamForPlayer(Youtube[youtubeid][PlayFor], Youtube[youtubeid][StreamLink], pos[0], pos[1], pos[2], Youtube[youtubeid][Distance], Youtube[youtubeid][UsePos]);
+	}
+	
+	Youtube[youtubeid][Timer] = SetTimerEx("SongFinished",GetVideoDuration(youtubeid)*1000,false,"i",youtubeid);
+}
+
 public OnYoutubeResponse(index, response_code, data[])
 {
 	new string[256];
@@ -226,7 +259,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	}
 	#endif
 
-	new JSONNode:response, Float:pos[3], time[3];
+	new JSONNode:response;
 
 	response = json_parse_string(data);
 
@@ -290,33 +323,7 @@ public OnYoutubeResponse(index, response_code, data[])
 			return 0;
 	}
 
-	Youtube[index][Playing] = true;
-
-	formatSeconds(GetVideoDuration(index),time[0],time[1],time[2]);
-	format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),time[0],time[1],time[2]);
-
-	if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
-	{
-		SendClientMessageToAll(-1, string);
-
-		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
-		{
-			if(IsPlayerConnected(i))
-			{
-				if(Youtube[index][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
-				PlayAudioStreamForPlayer(i, Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-			}
-		}
-	}
-	else
-	{
-		SendClientMessage(Youtube[index][PlayFor], -1, string);
-
-		if(Youtube[index][UsePos]) GetPlayerPos(Youtube[index][PlayFor], pos[0], pos[1], pos[2]);
-		PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-	}
-	
-	Youtube[index][Timer] = SetTimerEx("SongFinished",GetVideoDuration(index)*1000,false,"i",index);
+	PlayYoutubeVideo(index);
 	return 1;
 }
 
@@ -334,8 +341,15 @@ public SongFinished(youtubeid)
 
 	if(Youtube[youtubeid][PlaylistID] != INVALID_PLAYLIST_ID)
 	{
+		new plist = Youtube[youtubeid][PlaylistID];
 		Youtube[youtubeid][PlaylistID] = INVALID_PLAYLIST_ID;
-		//play next	
+
+		for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+		{
+			if(Youtube[i][PlaylistID] != plist) continue;
+			PlayYoutubeVideo(i);
+			break;
+		}
 	}
 
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
