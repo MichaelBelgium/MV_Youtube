@@ -31,8 +31,8 @@ native GetPlaylistFromVideo(youtubeid)
 public OnYoutubeVideoStart(youtubeid)
 public OnYoutubeVideoFinished(youtubeid)
 public OnYoutubeDownloadError(youtubeid, message[])
-public OnPlaylistAddEntry(playerlistid, youtubeid);
-public OnPlaylistFinished(playlistid);
+public OnPlaylistAddEntry(playerlistid, youtubeid)
+public OnPlaylistFinished(playlistid)
 ```
 
 # Requirements
