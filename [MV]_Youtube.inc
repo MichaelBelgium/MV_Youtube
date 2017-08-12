@@ -56,15 +56,19 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, startat = 0, bool:
 {
 	new id = GetFreeIndex(), requestlink[128];
 
-	Youtube[id][PlayFor] = playfor;
-	Youtube[id][Distance] = distance;
-	Youtube[id][UsePos] = usepos;
+	if(id != INVALID_YT_ID)
+	{
 
-	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
-	format(Youtube[id][Link],256,"%s",url);
+		Youtube[id][PlayFor] = playfor;
+		Youtube[id][Distance] = distance;
+		Youtube[id][UsePos] = usepos;
 
-	format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
-	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+		format(Youtube[id][Link],256,"%s",url);
+
+		format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
+		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+	}
 	return id;
 }
 
@@ -74,20 +78,23 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = fals
 {
 	new id = GetFreeIndex(), requestlink[128];
 
-	Youtube[id][PlayFor] = playfor;
-	Youtube[id][Distance] = distance;
-	Youtube[id][UsePos] = usepos;
+	if(id != INVALID_YT_ID)
+	{
+		Youtube[id][PlayFor] = playfor;
+		Youtube[id][Distance] = distance;
+		Youtube[id][UsePos] = usepos;
 
-	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
-	format(Youtube[id][Link],256,"%s",url);
+		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+		format(Youtube[id][Link],256,"%s",url);
 
-	#if USE_VERSION == 1
-	format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
-	#else
-	strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
-	format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
-	#endif
-	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+		#if USE_VERSION == 1
+		format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
+		#else
+		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
+		format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
+		#endif
+		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+	}
 	return id;
 }
 
@@ -100,6 +107,7 @@ stock GetFreeIndex()
 		if(!Youtube[i][Playing]) return i;
 	}
 
+	print("[Warning] MV_Youtube: MAX_YOUTUBE_SAVES reached!");
 	return INVALID_YT_ID;
 }
 
@@ -122,15 +130,15 @@ stock StopYoutubeVideo(youtubeid)
 
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
 stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_ID ? false : Youtube[youtubeid][Playing];
-stock GetVideoDuration(youtubeid)			return Youtube[youtubeid][Duration];
-stock GetVideoTitle(youtubeid) 
+stock GetVideoDuration(youtubeid)			return youtubeid == INVALID_YT_ID ? 0 : Youtube[youtubeid][Duration];
+stock GetVideoTitle(youtubeid)
 {
     new str[256];
     strins(str, Youtube[youtubeid][Title], 0);
     return str;
 }
 
-stock GetVideoLink(youtubeid) 
+stock GetVideoLink(youtubeid)
 {
     new str[256];
     strins(str, Youtube[youtubeid][Link], 0);
@@ -153,8 +161,11 @@ stock CreatePlaylist(name[])
 		if(Playlist[i][Active]) continue;
 		Playlist[i][Active] = true;
 		format(Playlist[i][Name], 32, "%s", name);
-		break;
+		printf("[Debug] Created playlist %i: %s", i, Playlist[i][Name]);
+		return i;
 	}
+
+	print("[Warning] MV_Youtube: MAX_PLAYLISTS reached!");
 	return INVALID_PLAYLIST_ID;
 }
 
@@ -198,11 +209,6 @@ public OnYoutubeResponse(index, response_code, data[])
 		{
 			json_get_string(response, string, sizeof(string), "type");
 			CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
-		}
-		else
-		{
-			json_get_string(response, string, sizeof(string), "message");
-			printf("Downloaded song: %s",string);
 		}
 		return 0;
 	}
