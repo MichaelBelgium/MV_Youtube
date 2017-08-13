@@ -10,7 +10,9 @@
 */
 
 #define MAX_YOUTUBE_SAVES	50
-#define INVALID_YT_INDEX	-1
+#define INVALID_YT_ID		-1
+#define INVALID_PLAYLIST_ID	-1
+#define MAX_PLAYLISTS		5
 
 #if USE_VERSION == 1
 #define API_KEY				"12345"
@@ -28,6 +30,7 @@ enum e_ytv
 	Link[256],
 	StreamLink[256],
 	PlayFor,
+	PlaylistID,
 	Float:Distance,
 	bool:UsePos,
 	Timer
@@ -35,49 +38,68 @@ enum e_ytv
 
 new Youtube[MAX_YOUTUBE_SAVES][e_ytv];
 
+enum e_plist
+{
+    bool:Active,
+    Name[32]
+};
+
+new Playlist[MAX_PLAYLISTS][e_plist];
+
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnYoutubeResponse(index, response_code, data[]);
 forward OnYoutubeDownloadError(youtubeid, message[]);
+forward OnYoutubeVideoStart(youtubeid);
+forward OnPlaylistAddEntry(playerlistid, youtubeid);
+forward OnPlaylistFinished(playlistid);
 
 #if USE_VERSION == 0
 
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
 {
 	new id = GetFreeIndex(), requestlink[128];
 
-	Youtube[id][PlayFor] = playfor;
-	Youtube[id][Distance] = distance;
-	Youtube[id][UsePos] = usepos;
+	if(id != INVALID_YT_ID)
+	{
+		Youtube[id][PlayFor] = playfor;
+		Youtube[id][Distance] = distance;
+		Youtube[id][UsePos] = usepos;
+		Youtube[id][PlaylistID] = playlist;
 
-	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
-	format(Youtube[id][Link],256,"%s",url);
+		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+		format(Youtube[id][Link],256,"%s",url);
 
-	format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
-	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+		format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
+		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+	}
 	return id;
 }
 
 #else
 
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, bool:usepos = false, Float:distance = 50.0)
+stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
 	new id = GetFreeIndex(), requestlink[128];
 
-	Youtube[id][PlayFor] = playfor;
-	Youtube[id][Distance] = distance;
-	Youtube[id][UsePos] = usepos;
+	if(id != INVALID_YT_ID)
+	{
+		Youtube[id][PlayFor] = playfor;
+		Youtube[id][Distance] = distance;
+		Youtube[id][UsePos] = usepos;
+		Youtube[id][PlaylistID] = playlist;
 
-	if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
-	format(Youtube[id][Link],256,"%s",url);
+		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
+		format(Youtube[id][Link],256,"%s",url);
 
-	#if USE_VERSION == 1
-	format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
-	#else
-	strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
-	format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
-	#endif
-	HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+		#if USE_VERSION == 1
+		format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
+		#else
+		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
+		format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
+		#endif
+		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
+	}
 	return id;
 }
 
@@ -87,10 +109,11 @@ stock GetFreeIndex()
 {
 	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
 	{
-		if(!Youtube[i][Playing]) return i;
+		if(!Youtube[i][Playing] && Youtube[i][PlaylistID] == INVALID_PLAYLIST_ID) return i;
 	}
 
-	return INVALID_YT_INDEX;
+	print("[Warning] MV_Youtube: MAX_YOUTUBE_SAVES reached!");
+	return INVALID_YT_ID;
 }
 
 stock StopYoutubeVideo(youtubeid)	
@@ -111,16 +134,18 @@ stock StopYoutubeVideo(youtubeid)
 }
 
 stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
-stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_INDEX ? false : Youtube[youtubeid][Playing];
-stock GetVideoDuration(youtubeid)			return Youtube[youtubeid][Duration];
-stock GetVideoTitle(youtubeid) 
+stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_ID ? false : Youtube[youtubeid][Playing];
+stock GetPlaylistFromVideo(youtubeid)		return youtubeid == INVALID_YT_ID ? INVALID_PLAYLIST_ID : Youtube[youtubeid][PlaylistID];
+stock GetVideoDuration(youtubeid)			return youtubeid == INVALID_YT_ID ? 0 : Youtube[youtubeid][Duration];
+stock GetVideoTarget(youtubeid)				return youtubeid == INVALID_YT_ID ? -1 : Youtube[youtubeid][PlayFor];
+stock GetVideoTitle(youtubeid)
 {
     new str[256];
     strins(str, Youtube[youtubeid][Title], 0);
     return str;
 }
 
-stock GetVideoLink(youtubeid) 
+stock GetVideoLink(youtubeid)
 {
     new str[256];
     strins(str, Youtube[youtubeid][Link], 0);
@@ -134,7 +159,94 @@ stock GetVideoStreamLink(youtubeid)
 	return str;
 }
 
-stock GetVideoTarget(youtubeid) return youtubeid == INVALID_YT_INDEX ? -1 : Youtube[youtubeid][PlayFor];
+stock CreatePlaylist(name[])
+{
+	for(new i = 0; i < MAX_PLAYLISTS; i++)
+	{
+		if(Playlist[i][Active]) continue;
+		Playlist[i][Active] = true;
+		format(Playlist[i][Name], 32, "%s", name);
+		return i;
+	}
+
+	print("[Warning] MV_Youtube: MAX_PLAYLISTS reached!");
+	return INVALID_PLAYLIST_ID;
+}
+
+stock RemovePlaylist(playlistid)
+{
+	if(playlistid != INVALID_PLAYLIST_ID)
+	{
+		Playlist[playlistid][Active] = false;
+		Playlist[playlistid][Name] = EOS;
+
+		for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+			if(Youtube[i][PlaylistID] == playlistid)
+				Youtube[i][PlaylistID] = INVALID_PLAYLIST_ID;
+	}
+}
+
+stock GetPlaylistName(playlistid)
+{
+	new str[32];
+	strins(str, Playlist[playlistid][Name], 0);
+	return str;
+}
+
+stock GetPlaylistSongs(playlistid)
+{
+	new songs[MAX_YOUTUBE_SAVES], pointer = 0;
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++) songs[i] = INVALID_YT_ID;
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(Youtube[i][PlaylistID] != playlistid) continue;
+		songs[pointer] = i;
+		pointer++;
+	}
+	return songs;
+}
+
+stock GetPlaylistSongsCount(playlistid)
+{
+	new count = 0;
+
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+	{
+		if(Youtube[i][PlaylistID] != playlistid) continue;
+		count++;
+	}
+
+	return count;
+}
+
+PlayYoutubeVideo(youtubeid) //shouldn't use this function outside of the include.
+{
+	new Float:pos[3];
+
+	Youtube[youtubeid][Playing] = true;
+
+	CallLocalFunction("OnYoutubeVideoStart", "i", youtubeid);
+
+	if(Youtube[youtubeid][PlayFor] == INVALID_PLAYER_ID)
+	{
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		{
+			if(IsPlayerConnected(i))
+			{
+				if(Youtube[youtubeid][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
+				PlayAudioStreamForPlayer(i, Youtube[youtubeid][StreamLink], pos[0], pos[1], pos[2], Youtube[youtubeid][Distance], Youtube[youtubeid][UsePos]);
+			}
+		}
+	}
+	else
+	{
+		if(Youtube[youtubeid][UsePos]) GetPlayerPos(Youtube[youtubeid][PlayFor], pos[0], pos[1], pos[2]);
+		PlayAudioStreamForPlayer(Youtube[youtubeid][PlayFor], Youtube[youtubeid][StreamLink], pos[0], pos[1], pos[2], Youtube[youtubeid][Distance], Youtube[youtubeid][UsePos]);
+	}
+	
+	Youtube[youtubeid][Timer] = SetTimerEx("SongFinished",GetVideoDuration(youtubeid)*1000,false,"i",youtubeid);
+}
 
 public OnYoutubeResponse(index, response_code, data[])
 {
@@ -157,7 +269,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	}
 	#endif
 
-	new JSONNode:response, Float:pos[3], time[3];
+	new JSONNode:response;
 
 	response = json_parse_string(data);
 
@@ -169,11 +281,6 @@ public OnYoutubeResponse(index, response_code, data[])
 		{
 			json_get_string(response, string, sizeof(string), "type");
 			CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
-		}
-		else
-		{
-			json_get_string(response, string, sizeof(string), "message");
-			printf("Downloaded song: %s",string);
 		}
 		return 0;
 	}
@@ -218,34 +325,15 @@ public OnYoutubeResponse(index, response_code, data[])
 	#endif
 	json_close(response);
 
-	Youtube[index][Playing] = true;
-
-	formatSeconds(GetVideoDuration(index),time[0],time[1],time[2]);
-	format(string,sizeof(string),"{0049FF}[Now playing] {00c9ff}%s (Duration: %02dh %02dm %02ds)",GetVideoTitle(index),time[0],time[1],time[2]);
-
-	if(Youtube[index][PlayFor] == INVALID_PLAYER_ID)
+	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
 	{
-		SendClientMessageToAll(-1, string);
+		CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
 
-		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
-		{
-			if(IsPlayerConnected(i))
-			{
-				if(Youtube[index][UsePos]) GetPlayerPos(i, pos[0], pos[1], pos[2]);
-				PlayAudioStreamForPlayer(i, Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-			}
-		}
+		if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) != 1)
+			return 0;
 	}
-	else
-	{
-		SendClientMessage(Youtube[index][PlayFor], -1, string);
 
-		if(Youtube[index][UsePos]) GetPlayerPos(Youtube[index][PlayFor], pos[0], pos[1], pos[2]);
-		PlayAudioStreamForPlayer(Youtube[index][PlayFor], Youtube[index][StreamLink], pos[0], pos[1], pos[2], Youtube[index][Distance], Youtube[index][UsePos]);
-	}
-	
-	Youtube[index][Timer] = SetTimerEx("SongFinished",GetVideoDuration(index)*1000,false,"i",index);
-	
+	PlayYoutubeVideo(index);
 	return 1;
 }
 
@@ -262,6 +350,23 @@ public SongFinished(youtubeid)
 	#endif
 
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
+
+	if(Youtube[youtubeid][PlaylistID] != INVALID_PLAYLIST_ID)
+	{
+		new plist = Youtube[youtubeid][PlaylistID], bool:finished = true;
+		Youtube[youtubeid][PlaylistID] = INVALID_PLAYLIST_ID;
+
+		for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
+		{
+			if(Youtube[i][PlaylistID] != plist) continue;
+			PlayYoutubeVideo(i);
+			finished = false;
+			break;
+		}
+
+		if(finished)
+			CallLocalFunction("OnPlaylistFinished", "i", plist);
+	}
 }
 
 stock GetError(val)
@@ -283,9 +388,23 @@ stock GetError(val)
 	return error;
 }
 
-stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
+public OnGameModeInit()
 {
-	hours_left = seconds/60/60;
-	minutes_left = (seconds - hours_left*60*60)/60;
-	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
+	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)	Youtube[i][PlaylistID] = INVALID_PLAYLIST_ID;
+
+	#if defined MV_OnGameModeInit
+		return MV_OnGameModeInit();
+	#else
+		return 1;
+	#endif
 }
+#if defined _ALS_OnGameModeInit
+	#undef OnGameModeInit
+#else
+	#define _ALS_OnGameModeInit
+#endif
+
+#define OnGameModeInit MV_OnGameModeInit
+#if defined MV_OnGameModeInit
+	forward MV_OnGameModeInit();
+#endif
