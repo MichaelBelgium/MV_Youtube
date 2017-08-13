@@ -37,7 +37,10 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {
 	if(gMyPlaylist[playerid] != INVALID_PLAYLIST_ID) 
+	{
 		RemovePlaylist(gMyPlaylist[playerid]);
+		gTotalPlaylists--;
+	}
 	return 1;
 }
 
