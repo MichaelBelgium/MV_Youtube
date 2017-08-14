@@ -50,7 +50,7 @@ By just doing this you're ready to roll.
 ## Settings
 
 First of all you need to choose which API you want. Default is youtubemp3script.
-If you have your own dedicated server / vps / any kind then I recommend you make your own API (or use mine, but I doubt thats smart as it uses my links to my server).
+If you have your own dedicated server / vps / any kind then I recommend you make your own API (number 2)
 
 ```PAWN
 #define USE_VERSION			1
@@ -67,7 +67,7 @@ If you have your own dedicated server / vps / any kind then I recommend you make
 ### 2: Your own API
 
 * Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
-* Notes: You might need to edit the requesturl in the include to match the one from your vps.
+* Notes: You might need to edit the requesturl in the include to match the one from your vps. If you don't wanna install it you can use mine (from michaelbelgium.me domain).
 
 # Images
 <img src="http://puu.sh/oRnMo.jpg" />

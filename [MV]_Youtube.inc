@@ -17,7 +17,7 @@
 #if USE_VERSION == 1
 #define API_KEY				"12345"
 #elseif USE_VERSION == 2
-#define CONVERTER_PATH		"lmdm.exp-gaming.net/ucp/ytconverter"
+#define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
 #define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
 #endif
 
