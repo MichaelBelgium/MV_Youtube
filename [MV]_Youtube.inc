@@ -279,7 +279,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	{
 		if(json_get_bool(response, "error"))
 		{
-			json_get_string(response, string, sizeof(string), "type");
+			json_get_string(response, string, sizeof(string), "message");
 			CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		}
 		return 0;
@@ -287,7 +287,7 @@ public OnYoutubeResponse(index, response_code, data[])
 
 	if(json_get_bool(response, "error"))
 	{
-		json_get_string(response, string, sizeof(string), "type");
+		json_get_string(response, string, sizeof(string), "message");
 		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
 		return 0;
 	}
