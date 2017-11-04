@@ -4,9 +4,8 @@
 #define USE_VERSION			1
 
 /*
-	0 = YoutubeInMP3
-	1 = youtubemp3script
-	2 = VPS api
+	0 = youtubemp3script
+	1 = VPS api
 */
 
 #define MAX_YOUTUBE_SAVES	50
@@ -14,9 +13,9 @@
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
-#if USE_VERSION == 1
-#define API_KEY				"12345"
-#elseif USE_VERSION == 2
+#if USE_VERSION == 0
+#define API_KEY				"1234567"
+#elseif USE_VERSION == 1
 #define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
 #define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
 #endif
@@ -54,29 +53,6 @@ forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
 forward OnPlaylistFinished(playlistid);
 
-#if USE_VERSION == 0
-
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, startat = 0, bool:usepos = false, Float:distance = 50.0)
-{
-	new id = GetFreeIndex(), requestlink[128];
-
-	if(id != INVALID_YT_ID)
-	{
-		Youtube[id][PlayFor] = playfor;
-		Youtube[id][Distance] = distance;
-		Youtube[id][UsePos] = usepos;
-		Youtube[id][PlaylistID] = playlist;
-
-		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
-		format(Youtube[id][Link],256,"%s",url);
-
-		format(requestlink,sizeof(requestlink),"youtubeinmp3.com/fetch/?format=json&video=%s&start=%i",Youtube[id][Link],startat);
-		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
-	}
-	return id;
-}
-
-#else
 
 stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
@@ -92,7 +68,7 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
 		format(Youtube[id][Link],256,"%s",url);
 
-		#if USE_VERSION == 1
+		#if USE_VERSION == 0
 		format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
 		#else
 		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
@@ -102,8 +78,6 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 	}
 	return id;
 }
-
-#endif
 
 stock GetFreeIndex()
 {
@@ -116,7 +90,7 @@ stock GetFreeIndex()
 	return INVALID_YT_ID;
 }
 
-stock StopYoutubeVideo(youtubeid)	
+stock StopYoutubeVideo(youtubeid)
 {
 	Youtube[youtubeid][Playing] = false;
 	KillTimer(Youtube[youtubeid][Timer]);
@@ -259,21 +233,9 @@ public OnYoutubeResponse(index, response_code, data[])
 		return 0;
 	}
 
-	#if USE_VERSION == 0
-	if (!strcmp(data, "<meta", true, 5))
-	{
-		response_code = 7;
-		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
-		return 0;
-	}
-	#endif
+	new JSONNode:response = json_parse_string(data);
 
-	new JSONNode:response;
-
-	response = json_parse_string(data);
-
-	#if USE_VERSION == 2
+	#if USE_VERSION == 1
 
 	if(index == 9999)
 	{
@@ -296,7 +258,7 @@ public OnYoutubeResponse(index, response_code, data[])
 	Youtube[index][Duration] = json_get_int(response, "duration");
 	json_get_string(response, Youtube[index][StreamLink], 512, "file");
 
-	#elseif USE_VERSION == 1
+	#elseif USE_VERSION == 0
 	new status[8];
 
 	json_get_string(response, status, sizeof(status), "status");
@@ -312,17 +274,8 @@ public OnYoutubeResponse(index, response_code, data[])
 	Youtube[index][Duration] = json_get_int(response, "length");
 	json_get_string(response, Youtube[index][StreamLink], 512, "url");
 	strins(Youtube[index][StreamLink], "http:", 0);
-	
-	#else 
-	new tmp_seconds[8];
-
-	json_get_string(response, Youtube[index][Title], 256, "title");
-	json_get_string(response, tmp_seconds, 8, "length");
-	json_get_string(response, Youtube[index][StreamLink], 256, "link");
-
-	Youtube[index][Duration] = strval(tmp_seconds);
-	
 	#endif
+
 	json_close(response);
 
 	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
@@ -341,7 +294,7 @@ public SongFinished(youtubeid)
 {
 	StopYoutubeVideo(youtubeid);
 
-	#if USE_VERSION == 2
+	#if USE_VERSION == 1
 		#if REMOVE_ON_FINISHED
 		new string[128];
 		format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
@@ -380,7 +333,6 @@ stock GetError(val)
 		case 4: error = "Can't write";
 		case 5: error = "Content too big";
 		case 6: error = "Malformed response";
-		case 7: error = "Youtube -> MP3 api failed";
 		case 300..308: error = "Redirection";
 		case 400..499: error = "Client error";
 		case 500..599: error = "Server error";

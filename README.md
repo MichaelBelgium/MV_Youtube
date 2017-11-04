@@ -4,10 +4,9 @@
 
 ## Functions and callbacks:
 
-**The functions PlayYoutubeVideoFor.. depends on which API you use.**
 
 ```PAWN
-native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, (startat = 0,) bool:usepos = false, Float:distance = 50.0) 
+native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0) 
 	-> returns a youtubeid
 native StopYoutubeVideo(youtubeid)
 
@@ -56,19 +55,16 @@ If you have your own dedicated server / vps / any kind then I recommend you make
 #define USE_VERSION			1
 ```
 
-### 0: YoutubeInMP3 
+### 0: youtubemp3script 
 
-* Requires nothing extra
+* Requires an **API key**
 
-### 1: youtubemp3script 
-
-* Requires an **API key** (the key "12345" works so it's default)
-
-### 2: Your own API
+### 1: Your own API
 
 * Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
-* Notes: You might need to edit the requesturl in the include to match the one from your vps. If you don't wanna install it you can use mine (from michaelbelgium.me domain).
+* Notes: You might need to edit the requesturl in the include to match the one from your vps.
+* If you don't wanna install it you can use mine (from michaelbelgium.me domain).
 
 # Images
-<img src="http://puu.sh/oRnMo.jpg" />
-<img src="http://puu.sh/oRnNh.png" />
+![Song info](http://puu.sh/oRnMo.jpg)
+![Song info](http://puu.sh/oRnNh.png)
