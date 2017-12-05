@@ -59,7 +59,7 @@ forward SongFinished(youtubeid);
 forward OnYtMp3Response(index, response_code, data[]);
 forward OnVpsResponse(index, response_code, data[]);
 forward OnSearchResponse(index, response_code, data[]);
-forward OnYoutubeDownloadError(youtubeid, message[]);
+forward OnMVYoutubeError(youtubeid, message[]);
 forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
 forward OnPlaylistFinished(playlistid);
@@ -249,7 +249,7 @@ public OnVpsResponse(index, response_code, data[])
 	if(response_code != 200)
 	{
 		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 
@@ -260,7 +260,7 @@ public OnVpsResponse(index, response_code, data[])
 		if(json_get_bool(response, "error"))
 		{
 			json_get_string(response, string, sizeof(string), "message");
-			CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+			CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		}
 		return 0;
 	}
@@ -268,7 +268,7 @@ public OnVpsResponse(index, response_code, data[])
 	if(json_get_bool(response, "error"))
 	{
 		json_get_string(response, string, sizeof(string), "message");
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 
@@ -297,7 +297,7 @@ public OnYtMp3Response(index, response_code, data[])
 	if(response_code != 200)
 	{
 		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 
@@ -308,7 +308,7 @@ public OnYtMp3Response(index, response_code, data[])
 	if(!strcmp(status, "error", true))
 	{
 		json_get_string(response, string, sizeof(string), "message");
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 
@@ -333,14 +333,19 @@ public OnYtMp3Response(index, response_code, data[])
 
 public OnSearchResponse(index, response_code, data[])
 {
-	if(response_code != 200) return 0;
-
 	new JSONNode:response = json_parse_string(data), JSONArray:results, string[128];
+
+	if(response_code != 200)
+	{
+		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
+		return 0;
+	}
 
 	if(json_get_bool(response, "error"))
 	{
 		json_get_string(response, string, sizeof(string), "message");
-		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 

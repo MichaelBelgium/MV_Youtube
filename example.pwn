@@ -248,7 +248,7 @@ public OnPlaylistAddEntry(playerlistid, youtubeid)
 	return 1;
 }
 
-public OnYoutubeDownloadError(youtubeid, message[])
+public OnMVYoutubeError(youtubeid, message[])
 {
 	new string[256], player = GetVideoTarget(youtubeid);
 
@@ -279,8 +279,8 @@ public OnYoutubeSearch(playerid)
 
 	for(new i = 0; i < MAX_SEARCH_RESULTS; i++)
 	{
-		printf("%s", SearchResults[playerid][i][Title]);
-		printf("%s", SearchResults[playerid][i][Link]);
+		// printf("%s", SearchResults[playerid][i][Title]);
+		// printf("%s", SearchResults[playerid][i][Link]);
 
 		format(string, sizeof(string), "%s\n", SearchResults[playerid][i][Title]);
 		strcat(searchdialog, string);
