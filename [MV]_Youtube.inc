@@ -47,7 +47,8 @@ new Playlist[MAX_PLAYLISTS][e_plist];
 
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
-forward OnYoutubeResponse(index, response_code, data[]);
+forward OnYtMp3Response(index, response_code, data[]);
+forward OnVpsResponse(index, response_code, data[]);
 forward OnYoutubeDownloadError(youtubeid, message[]);
 forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
@@ -70,11 +71,12 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 
 		#if USE_VERSION == 0
 		format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
+		HTTP(id, HTTP_GET, requestlink, "", "OnYtMp3Response");
 		#else
 		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
 		format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
+		HTTP(id, HTTP_GET, requestlink, "", "OnVpsResponse");
 		#endif
-		HTTP(id, HTTP_GET, requestlink, "", "OnYoutubeResponse");
 	}
 	return id;
 }
@@ -222,7 +224,7 @@ PlayYoutubeVideo(youtubeid) //shouldn't use this function outside of the include
 	Youtube[youtubeid][Timer] = SetTimerEx("SongFinished",GetVideoDuration(youtubeid)*1000,false,"i",youtubeid);
 }
 
-public OnYoutubeResponse(index, response_code, data[])
+public OnVpsResponse(index, response_code, data[])
 {
 	new string[256];
 
@@ -234,8 +236,6 @@ public OnYoutubeResponse(index, response_code, data[])
 	}
 
 	new JSONNode:response = json_parse_string(data);
-
-	#if USE_VERSION == 1
 
 	if(index == 9999)
 	{
@@ -258,8 +258,32 @@ public OnYoutubeResponse(index, response_code, data[])
 	Youtube[index][Duration] = json_get_int(response, "duration");
 	json_get_string(response, Youtube[index][StreamLink], 512, "file");
 
-	#elseif USE_VERSION == 0
-	new status[8];
+	json_close(response);
+
+	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
+	{
+		CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
+
+		if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) != 1)
+			return 0;
+	}
+
+	PlayYoutubeVideo(index);
+	return 1;
+}
+
+public OnYtMp3Response(index, response_code, data[])
+{
+	new string[256];
+
+	if(response_code != 200)
+	{
+		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		return 0;
+	}
+
+	new JSONNode:response = json_parse_string(data), status[8];
 
 	json_get_string(response, status, sizeof(status), "status");
 
@@ -274,7 +298,6 @@ public OnYoutubeResponse(index, response_code, data[])
 	Youtube[index][Duration] = json_get_int(response, "length");
 	json_get_string(response, Youtube[index][StreamLink], 512, "url");
 	strins(Youtube[index][StreamLink], "http:", 0);
-	#endif
 
 	json_close(response);
 
@@ -298,7 +321,7 @@ public SongFinished(youtubeid)
 		#if REMOVE_ON_FINISHED
 		new string[128];
 		format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
-		HTTP(9999, HTTP_GET, string, "", "OnYoutubeResponse");
+		HTTP(9999, HTTP_GET, string, "", "OnVpsResponse");
 		#endif
 	#endif
 

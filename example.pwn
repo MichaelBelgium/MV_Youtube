@@ -183,7 +183,7 @@ public OnYoutubeVideoStart(youtubeid)
 
 public OnYoutubeVideoFinished(youtubeid)
 {
-	new string[128];
+	new string[256];
 	if(youtubeid == gYoutubeIDForAll)
 	{
 		format(string, sizeof(string), "The song that played for everyone (%s) has finished. Execute /playforall to play another song.", GetVideoTitle(youtubeid));
