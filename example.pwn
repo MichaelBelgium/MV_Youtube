@@ -1,9 +1,10 @@
 #include <a_samp>
 #include <zcmd>
 #include <sscanf2>
-#include <[MV]_Youtube>
+#include <MV_Youtube>
 
 #define COLOR_RED	0xAA3333AA
+#define DIALOG_SEARCH_AND_PLAY	555
 
 new gYoutubeID[MAX_PLAYERS], gYoutubeIDForAll;
 new gMyPlaylist[MAX_PLAYERS], gEveryonesPlaylist, gTotalPlaylists;
@@ -45,6 +46,13 @@ public OnPlayerDisconnect(playerid, reason)
 }
 
 // ============ PLAYLISTS ====================
+CMD:search(playerid, params[])
+{
+	new mysearch[64];
+	if(sscanf(params, "s[64]", mysearch)) return SendClientMessage(playerid, COLOR_RED, "Usage: /search [something]");
+	SearchYoutubeVideos(playerid, mysearch);
+	return 1;
+}
 
 CMD:createmyplaylist(playerid,params[])
 {
@@ -183,7 +191,7 @@ public OnYoutubeVideoStart(youtubeid)
 
 public OnYoutubeVideoFinished(youtubeid)
 {
-	new string[256];
+	new string[128];
 	if(youtubeid == gYoutubeIDForAll)
 	{
 		format(string, sizeof(string), "The song that played for everyone (%s) has finished. Execute /playforall to play another song.", GetVideoTitle(youtubeid));
@@ -253,9 +261,48 @@ public OnYoutubeDownloadError(youtubeid, message[])
 	return 1;
 }
 
+public OnYoutubeSearch(playerid)
+{
+	/*
+	To get the results of the player who searched:
+
+	enum pSearchResult
+	{
+		Title[64],
+		Link[128]
+	};
+
+	new SearchResults[MAX_PLAYERS][MAX_SEARCH_RESULTS][pSearchResult];
+	*/
+
+	new string[128],searchdialog[256*5];
+
+	for(new i = 0; i < MAX_SEARCH_RESULTS; i++)
+	{
+		printf("%s", SearchResults[playerid][i][Title]);
+		printf("%s", SearchResults[playerid][i][Link]);
+
+		format(string, sizeof(string), "%s\n", SearchResults[playerid][i][Title]);
+		strcat(searchdialog, string);
+	}
+
+	ShowPlayerDialog(playerid, DIALOG_SEARCH_AND_PLAY, DIALOG_STYLE_LIST, "Results", searchdialog, "Play", "Exit");
+	return 1;
+}
+
 stock formatSeconds(seconds, &hours_left, &minutes_left, &seconds_left)
 {
 	hours_left = seconds/60/60;
 	minutes_left = (seconds - hours_left*60*60)/60;
 	seconds_left = (seconds - hours_left*60*60 - minutes_left*60);
+}
+
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+{
+	if(dialogid == DIALOG_SEARCH_AND_PLAY)
+	{
+		if(SearchResults[playerid][listitem][Link][0] == EOS) return 0;
+		PlayYoutubeVideoFor(SearchResults[playerid][listitem][Link], playerid);
+	}
+	return 1;
 }

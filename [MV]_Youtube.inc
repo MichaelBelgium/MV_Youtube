@@ -18,6 +18,7 @@
 #elseif USE_VERSION == 1
 #define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
 #define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
+#define MAX_SEARCH_RESULTS 	5
 #endif
 
 enum e_ytv
@@ -45,14 +46,24 @@ enum e_plist
 
 new Playlist[MAX_PLAYLISTS][e_plist];
 
+enum pSearchResult
+{
+	Title[64],
+	Link[128]
+};
+
+new SearchResults[MAX_PLAYERS][MAX_SEARCH_RESULTS][pSearchResult];
+
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnYtMp3Response(index, response_code, data[]);
 forward OnVpsResponse(index, response_code, data[]);
+forward OnSearchResponse(index, response_code, data[]);
 forward OnYoutubeDownloadError(youtubeid, message[]);
 forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
 forward OnPlaylistFinished(playlistid);
+forward OnYoutubeSearch(playerid);
 
 
 stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
@@ -79,6 +90,13 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 		#endif
 	}
 	return id;
+}
+
+stock SearchYoutubeVideos(playerid, searchquery[])
+{
+	new requestlink[128];
+	format(requestlink, sizeof(requestlink), "%s/search.php?q=%s&max_results=%i", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS);
+	HTTP(playerid, HTTP_GET, requestlink, "", "OnSearchResponse");
 }
 
 stock GetFreeIndex()
@@ -310,6 +328,37 @@ public OnYtMp3Response(index, response_code, data[])
 	}
 
 	PlayYoutubeVideo(index);
+	return 1;
+}
+
+public OnSearchResponse(index, response_code, data[])
+{
+	if(response_code != 200) return 0;
+
+	new JSONNode:response = json_parse_string(data), JSONArray:results, string[128];
+
+	if(json_get_bool(response, "error"))
+	{
+		json_get_string(response, string, sizeof(string), "message");
+		CallLocalFunction("OnYoutubeDownloadError", "is", index, string);
+		return 0;
+	}
+
+	results = json_get_array(response, "results");
+
+	new title[128], link[256];
+	for(new i = 0; i < json_array_count(results); i++)
+	{
+		new JSONNode:node = json_array_at(results, i);
+
+		json_get_string(node, title, sizeof(title), "title");
+		json_get_string(node, link, sizeof(link), "full_link");
+
+		format(SearchResults[index][i][Title], sizeof(title), "%s", title);
+		format(SearchResults[index][i][Link], sizeof(link), "%s", link);
+	}
+
+	CallLocalFunction("OnYoutubeSearch", "i", index);
 	return 1;
 }
 
