@@ -48,6 +48,7 @@ public OnPlayerDisconnect(playerid, reason)
 // ============ PLAYLISTS ====================
 CMD:search(playerid, params[])
 {
+	//this example will search for video's, list them in a dialog and when clicking on one of them they will download/play.
 	new mysearch[64];
 	if(sscanf(params, "s[64]", mysearch)) return SendClientMessage(playerid, COLOR_RED, "Usage: /search [something]");
 	SearchYoutubeVideos(playerid, mysearch);

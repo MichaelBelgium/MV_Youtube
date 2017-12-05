@@ -27,9 +27,12 @@ native GetPlaylistSongs(playlistid)
 native GetPlaylistSongsCount(playlistid)
 native GetPlaylistFromVideo(youtubeid)
 
+native SearchYoutubeVideos(playerid, searchquery[])
+public OnYoutubeSearch(playerid)
+
 public OnYoutubeVideoStart(youtubeid)
 public OnYoutubeVideoFinished(youtubeid)
-public OnYoutubeDownloadError(youtubeid, message[])
+public OnMVYoutubeError(youtubeid, message[])
 public OnPlaylistAddEntry(playlistid, youtubeid)
 public OnPlaylistFinished(playlistid)
 ```
