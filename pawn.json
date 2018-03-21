@@ -1,0 +1,10 @@
+{
+	"user": "MichaelBelgium",
+	"repo": "MV_Youtube",
+	"entry": "test.pwn",
+	"output": "test.amx",
+	"dependencies": [
+		"Southclaws/samp-stdlib",
+		"Hual/SAMPSON"
+	]
+}
