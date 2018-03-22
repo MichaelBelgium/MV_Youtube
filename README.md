@@ -43,10 +43,14 @@ public OnPlaylistFinished(playlistid)
 
 # Installing
 
-By just doing this you're ready to roll.
+Using sampctl:
+
+`sampctl package install MichaelBelgium/MV_Youtube:^4.x`
+
+And/or manually:
 
 ```pawn
-#include <[MV]_Youtube>
+#include <MV_Youtube>
 ```
 
 ## Settings
