@@ -1,25 +1,14 @@
 #include <a_http>
 #include <a_json>
 
-#define USE_VERSION			1
-
-/*
-	0 = youtubemp3script
-	1 = VPS api
-*/
-
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_ID		-1
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
-#if USE_VERSION == 0
-#define API_KEY				"1234567"
-#elseif USE_VERSION == 1
 #define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
 #define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
 #define MAX_SEARCH_RESULTS 	5
-#endif
 
 enum e_ytv
 {
@@ -56,7 +45,6 @@ new SearchResults[MAX_PLAYERS][MAX_SEARCH_RESULTS][pSearchResult];
 
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
-forward OnYtMp3Response(index, response_code, data[]);
 forward OnVpsResponse(index, response_code, data[]);
 forward OnSearchResponse(index, response_code, data[]);
 forward OnMVYoutubeError(youtubeid, message[]);
@@ -80,14 +68,9 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
 		format(Youtube[id][Link],256,"%s",url);
 
-		#if USE_VERSION == 0
-		format(requestlink,sizeof(requestlink),"www.yt-mp3.com/fetch?v=%s&apikey=%s",Youtube[id][Link], API_KEY);
-		HTTP(id, HTTP_GET, requestlink, "", "OnYtMp3Response");
-		#else
 		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
 		format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
 		HTTP(id, HTTP_GET, requestlink, "", "OnVpsResponse");
-		#endif
 	}
 	return id;
 }
@@ -290,47 +273,6 @@ public OnVpsResponse(index, response_code, data[])
 	return 1;
 }
 
-public OnYtMp3Response(index, response_code, data[])
-{
-	new string[256];
-
-	if(response_code != 200)
-	{
-		format(string, sizeof(string), "%s - response code: %i", GetError(response_code), response_code);
-		CallLocalFunction("OnMVYoutubeError", "is", index, string);
-		return 0;
-	}
-
-	new JSONNode:response = json_parse_string(data), status[8];
-
-	json_get_string(response, status, sizeof(status), "status");
-
-	if(!strcmp(status, "error", true))
-	{
-		json_get_string(response, string, sizeof(string), "message");
-		CallLocalFunction("OnMVYoutubeError", "is", index, string);
-		return 0;
-	}
-
-	json_get_string(response, Youtube[index][Title], 256, "title");
-	Youtube[index][Duration] = json_get_int(response, "length");
-	json_get_string(response, Youtube[index][StreamLink], 512, "url");
-	strins(Youtube[index][StreamLink], "http:", 0);
-
-	json_close(response);
-
-	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
-	{
-		CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
-
-		if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) != 1)
-			return 0;
-	}
-
-	PlayYoutubeVideo(index);
-	return 1;
-}
-
 public OnSearchResponse(index, response_code, data[])
 {
 	new JSONNode:response = json_parse_string(data), JSONArray:results, string[128];
@@ -371,12 +313,10 @@ public SongFinished(youtubeid)
 {
 	StopYoutubeVideo(youtubeid);
 
-	#if USE_VERSION == 1
-		#if REMOVE_ON_FINISHED
-		new string[128];
-		format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
-		HTTP(9999, HTTP_GET, string, "", "OnVpsResponse");
-		#endif
+	#if REMOVE_ON_FINISHED
+	new string[128];
+	format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
+	HTTP(9999, HTTP_GET, string, "", "OnVpsResponse");
 	#endif
 
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);

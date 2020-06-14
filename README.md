@@ -45,7 +45,7 @@ public OnPlaylistFinished(playlistid)
 
 Using sampctl:
 
-`sampctl package install MichaelBelgium/MV_Youtube:^4.x`
+`sampctl package install MichaelBelgium/MV_Youtube`
 
 And/or manually:
 
@@ -53,39 +53,23 @@ And/or manually:
 #include <MV_Youtube>
 ```
 
+## Youtube API
+
+This include requires a Youtube API.. which one? This one: [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
+
+You are free to use the existing settings of this include that uses the installed youtube API on my domain. If preferred, you can install the API yourself on your own dedicated server/vps and configure the include to use that.
+
 ## Settings
 
-First of all you need to choose which API you want. Default is youtubemp3script.
-If you have your own dedicated server / vps / any kind then I recommend you make your own API (number 2)
-
-```PAWN
-#define USE_VERSION			1
-```
-
-### 0: youtubemp3script 
-
-* Requires an **API key**
-
-### 1: Your own API
-
-* Requires [Youtube-to-mp3-API](https://github.com/MichaelBelgium/Youtube-to-mp3-API)
-* Notes: You might need to edit the requesturl in the include to match the one from your vps.
-* If you don't wanna install it you can use mine (from michaelbelgium.me domain).
-
-Other settings:
 ```PAWN
 #define MAX_YOUTUBE_SAVES	50
 #define INVALID_YT_ID		-1
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
-#if USE_VERSION == 0
-#define API_KEY				"1234567"
-#elseif USE_VERSION == 1
 #define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
 #define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
 #define MAX_SEARCH_RESULTS 	5
-#endif
 ```
 
 # Images
