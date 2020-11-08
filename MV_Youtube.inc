@@ -45,16 +45,21 @@ new SearchResults[MAX_PLAYERS][MAX_SEARCH_RESULTS][pSearchResult];
 
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
-forward OnVpsResponse(index, response_code, data[]);
-forward OnSearchResponse(index, response_code, data[]);
-forward OnMVYoutubeError(youtubeid, message[]);
+forward OnVpsResponse(index, response_code, const data[]);
+forward OnSearchResponse(index, response_code, const data[]);
+forward OnMVYoutubeError(youtubeid, const message[]);
 forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
 forward OnPlaylistFinished(playlistid);
 forward OnYoutubeSearch(playerid);
 
+stock IsValidYoutubeURL(const string[])		return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
+stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_ID ? false : Youtube[youtubeid][Playing];
+stock GetPlaylistFromVideo(youtubeid)		return youtubeid == INVALID_YT_ID ? INVALID_PLAYLIST_ID : Youtube[youtubeid][PlaylistID];
+stock GetVideoDuration(youtubeid)			return youtubeid == INVALID_YT_ID ? 0 : Youtube[youtubeid][Duration];
+stock GetVideoTarget(youtubeid)				return youtubeid == INVALID_YT_ID ? -1 : Youtube[youtubeid][PlayFor];
 
-stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
+stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
 	new id = GetFreeIndex(), requestlink[128];
 
@@ -75,7 +80,7 @@ stock PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID
 	return id;
 }
 
-stock SearchYoutubeVideos(playerid, searchquery[])
+stock SearchYoutubeVideos(playerid, const searchquery[])
 {
 	new requestlink[128];
 	format(requestlink, sizeof(requestlink), "%s/search.php?q=%s&max_results=%i", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS);
@@ -110,11 +115,6 @@ stock StopYoutubeVideo(youtubeid)
 		StopAudioStreamForPlayer(Youtube[youtubeid][PlayFor]);
 }
 
-stock IsValidYoutubeURL(string[])			return (strfind(string,"youtube.com") != -1 && strfind(string,"watch?v=") != -1);
-stock IsYouTubeVideoPlaying(youtubeid)		return youtubeid == INVALID_YT_ID ? false : Youtube[youtubeid][Playing];
-stock GetPlaylistFromVideo(youtubeid)		return youtubeid == INVALID_YT_ID ? INVALID_PLAYLIST_ID : Youtube[youtubeid][PlaylistID];
-stock GetVideoDuration(youtubeid)			return youtubeid == INVALID_YT_ID ? 0 : Youtube[youtubeid][Duration];
-stock GetVideoTarget(youtubeid)				return youtubeid == INVALID_YT_ID ? -1 : Youtube[youtubeid][PlayFor];
 stock GetVideoTitle(youtubeid)
 {
     new str[256];
@@ -136,7 +136,7 @@ stock GetVideoStreamLink(youtubeid)
 	return str;
 }
 
-stock CreatePlaylist(name[])
+stock CreatePlaylist(const name[])
 {
 	for(new i = 0; i < MAX_PLAYLISTS; i++)
 	{
@@ -225,7 +225,7 @@ PlayYoutubeVideo(youtubeid) //shouldn't use this function outside of the include
 	Youtube[youtubeid][Timer] = SetTimerEx("SongFinished",GetVideoDuration(youtubeid)*1000,false,"i",youtubeid);
 }
 
-public OnVpsResponse(index, response_code, data[])
+public OnVpsResponse(index, response_code, const data[])
 {
 	new string[256];
 
@@ -273,7 +273,7 @@ public OnVpsResponse(index, response_code, data[])
 	return 1;
 }
 
-public OnSearchResponse(index, response_code, data[])
+public OnSearchResponse(index, response_code, const data[])
 {
 	new JSONNode:response = json_parse_string(data), JSONArray:results, string[128];
 
@@ -367,6 +367,7 @@ public OnGameModeInit()
 		return 1;
 	#endif
 }
+
 #if defined _ALS_OnGameModeInit
 	#undef OnGameModeInit
 #else
