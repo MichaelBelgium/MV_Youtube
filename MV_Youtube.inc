@@ -1,14 +1,31 @@
+#if defined MV_Youtube_Included
+	#endinput
+#endif
+#define MV_Youtube_Included
+
 #include <a_http>
 #include <a_json>
 
-#define MAX_YOUTUBE_SAVES	50
+#if !defined MAX_YOUTUBE_SAVES
+	#define MAX_YOUTUBE_SAVES	50
+#endif 
+
+#if !defined CONVERTER_PATH
+	#define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
+#endif 
+
+// NOTE: Remove the downloaded song when the song finished playing or not
+#if !defined REMOVE_ON_FINISHED
+	#define REMOVE_ON_FINISHED	true
+#endif
+
+#if !defined MAX_SEARCH_RESULTS
+	#define MAX_SEARCH_RESULTS 	5
+#endif
+
 #define INVALID_YT_ID		-1
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
-
-#define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
-#define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
-#define MAX_SEARCH_RESULTS 	5
 
 enum e_ytv
 {
