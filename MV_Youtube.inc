@@ -18,6 +18,10 @@
 	#define MAX_SEARCH_RESULTS 	5
 #endif
 
+#if !defined API_KEY
+	#define API_KEY 	""
+#endif
+
 #define INVALID_YT_ID		-1
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
@@ -86,7 +90,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 		format(Youtube[id][Link],256,"%s",url);
 
 		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
-		format(requestlink,sizeof(requestlink),"%s/convert?url=%s",CONVERTER_PATH,Youtube[id][Link]);
+		format(requestlink,sizeof(requestlink),"%s/convert?url=%s&api_token=%s",CONVERTER_PATH,Youtube[id][Link],API_KEY);
 		HTTP(id, HTTP_GET, requestlink, "", "OnVpsResponse");
 	}
 	return id;
@@ -95,7 +99,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 stock SearchYoutubeVideos(playerid, const searchquery[])
 {
 	new requestlink[128];
-	format(requestlink, sizeof(requestlink), "%s/search?q=%s&max_results=%i", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS);
+	format(requestlink, sizeof(requestlink), "%s/search?q=%s&max_results=%i&api_token=%s", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS,API_KEY);
 	HTTP(playerid, HTTP_GET, requestlink, "", "OnSearchResponse");
 }
 
