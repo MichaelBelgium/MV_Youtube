@@ -11,13 +11,8 @@
 #endif 
 
 #if !defined CONVERTER_PATH
-	#define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
+	#define CONVERTER_PATH		"youtube.michaelbelgium.me/api/converter"
 #endif 
-
-// NOTE: Remove the downloaded song when the song finished playing or not
-#if !defined REMOVE_ON_FINISHED
-	#define REMOVE_ON_FINISHED	true
-#endif
 
 #if !defined MAX_SEARCH_RESULTS
 	#define MAX_SEARCH_RESULTS 	5
@@ -91,7 +86,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 		format(Youtube[id][Link],256,"%s",url);
 
 		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
-		format(requestlink,sizeof(requestlink),"%s/convert.php?youtubelink=%s",CONVERTER_PATH,Youtube[id][Link]);
+		format(requestlink,sizeof(requestlink),"%s/convert?url=%s",CONVERTER_PATH,Youtube[id][Link]);
 		HTTP(id, HTTP_GET, requestlink, "", "OnVpsResponse");
 	}
 	return id;
@@ -100,7 +95,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 stock SearchYoutubeVideos(playerid, const searchquery[])
 {
 	new requestlink[128];
-	format(requestlink, sizeof(requestlink), "%s/search.php?q=%s&max_results=%i", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS);
+	format(requestlink, sizeof(requestlink), "%s/search?q=%s&max_results=%i", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS);
 	HTTP(playerid, HTTP_GET, requestlink, "", "OnSearchResponse");
 }
 
@@ -329,12 +324,6 @@ public OnSearchResponse(index, response_code, const data[])
 public SongFinished(youtubeid)
 {
 	StopYoutubeVideo(youtubeid);
-
-	#if REMOVE_ON_FINISHED
-	new string[128];
-	format(string,sizeof(string),"%s/convert.php?delete=%s",CONVERTER_PATH,Youtube[youtubeid][ytID]);
-	HTTP(9999, HTTP_GET, string, "", "OnVpsResponse");
-	#endif
 
 	CallLocalFunction("OnYoutubeVideoFinished","i",youtubeid);
 

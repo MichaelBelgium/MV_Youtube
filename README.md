@@ -67,8 +67,7 @@ You are free to use the existing settings of this include that uses the installe
 #define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
-#define CONVERTER_PATH		"michaelbelgium.me/ytconverter"
-#define REMOVE_ON_FINISHED	true 		//Remove the downloaded song when the song finished playing or not
+#define CONVERTER_PATH		"youtube.michaelbelgium.me/api/converter"
 #define MAX_SEARCH_RESULTS 	5
 ```
 
