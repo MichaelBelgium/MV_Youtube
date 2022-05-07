@@ -2,32 +2,88 @@
 
 #include "MV_Youtube.inc"
 
-new test, myPlaylist, another;
+new youtube_ids[3], myPlaylist;
 
 main() {
-	// write tests for libraries here and run "sampctl package run"
-	test = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=TyHvyGVs42U");
-	SetTimer("OnTestVideo", 10000, false);
+	for (new i = 0; i < sizeof(youtube_ids); i++) 
+		youtube_ids[i] = INVALID_YT_ID;
 
-	myPlaylist = CreatePlaylist("Testing");
-	another = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=uGhKqb2Ow3E", INVALID_PLAYER_ID, myPlaylist);
-	SetTimer("OnTestPlaylist", 10000, false);
+	youtube_ids[0] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=TyHvyGVs42U");
+	SetTimer("OnTest", 10000, false);
+
+	SearchYoutubeVideos(0, "michaelbelgium");
 }
 
-forward OnTestVideo();
-public OnTestVideo()
+forward OnTest();
+public OnTest()
 {
-	printf("%s", GetVideoTitle(test));
-	printf("%s", GetVideoLink(test));
-	printf("%i", GetVideoDuration(test));
-	printf("%s", GetVideoStreamLink(test));
-	printf("%i", GetVideoTarget(test));
+	printf("---------- Testing video response %i ----------", youtube_ids[0]);
+	printf("Title: %s", GetVideoTitle(youtube_ids[0]));
+	printf("Link: %s", GetVideoLink(youtube_ids[0]));
+	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[0]));
+	printf("Stream: %s", GetVideoStreamLink(youtube_ids[0]));
+	printf("Play for: %i", GetVideoTarget(youtube_ids[0]));
+	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[0]));
+
+
+	myPlaylist = CreatePlaylist("Playlist 1");
+	youtube_ids[1] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=uGhKqb2Ow3E", INVALID_PLAYER_ID, myPlaylist);
+	youtube_ids[2] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=NkrkAsRVLEA", INVALID_PLAYER_ID, myPlaylist);
+	SetTimer("OnTestPlaylist", 10000, false);
 }
 
 forward OnTestPlaylist();
 public OnTestPlaylist()
 {
-	printf("%s", GetPlaylistName(myPlaylist));
-	printf("%i", GetPlaylistSongsCount(myPlaylist));
-	printf("%i", GetPlaylistFromVideo(another));
+	printf("---------- Testing video response %i ----------", youtube_ids[1]);
+	printf("Title: %s", GetVideoTitle(youtube_ids[1]));
+	printf("Link: %s", GetVideoLink(youtube_ids[1]));
+	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[1]));
+	printf("Stream: %s", GetVideoStreamLink(youtube_ids[1]));
+	printf("Play for: %i", GetVideoTarget(youtube_ids[1]));
+	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[1]));
+
+	printf("---------- Testing video response %i ----------", youtube_ids[1]);
+	printf("Title: %s", GetVideoTitle(youtube_ids[2]));
+	printf("Link: %s", GetVideoLink(youtube_ids[2]));
+	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[2]));
+	printf("Stream: %s", GetVideoStreamLink(youtube_ids[2]));
+	printf("Play for: %i", GetVideoTarget(youtube_ids[2]));
+	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[2]));
+
+	print("---------- Testing playlist response ----------");
+	printf("Id: %i", myPlaylist);
+	printf("Name: %s", GetPlaylistName(myPlaylist));
+	printf("Songcount: %i", GetPlaylistSongsCount(myPlaylist));
+}
+
+public OnMVYoutubeError(youtubeid, const message[])
+{
+	printf("Video %i encountered an error: %s", youtubeid, message);
+}
+
+public OnPlaylistAddEntry(playerlistid, youtubeid)
+{
+	printf("Added video %i to playlist %i", youtubeid, playerlistid);
+}
+
+public OnYoutubeVideoStart(youtubeid)
+{
+	printf("Video %i started", youtubeid);
+}
+
+public OnPlaylistFinished(playlistid)
+{
+	printf("Playlist %i finished", playlistid);
+}
+
+public OnYoutubeSearch(playerid)
+{
+	print("---------- Search response ----------");
+
+	for(new i = 0; i < MAX_SEARCH_RESULTS; i++)
+	{
+		printf("Title: %s", SearchResults[playerid][i][Title]);
+		printf("Link: %s", SearchResults[playerid][i][Link]);
+	}
 }
