@@ -17,14 +17,7 @@ main() {
 forward OnTest();
 public OnTest()
 {
-	printf("---------- Testing video response %i ----------", youtube_ids[0]);
-	printf("Title: %s", GetVideoTitle(youtube_ids[0]));
-	printf("Link: %s", GetVideoLink(youtube_ids[0]));
-	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[0]));
-	printf("Stream: %s", GetVideoStreamLink(youtube_ids[0]));
-	printf("Play for: %i", GetVideoTarget(youtube_ids[0]));
-	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[0]));
-
+	printSong(0);
 
 	myPlaylist = CreatePlaylist("Playlist 1");
 	youtube_ids[1] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=uGhKqb2Ow3E", INVALID_PLAYER_ID, myPlaylist);
@@ -35,26 +28,24 @@ public OnTest()
 forward OnTestPlaylist();
 public OnTestPlaylist()
 {
-	printf("---------- Testing video response %i ----------", youtube_ids[1]);
-	printf("Title: %s", GetVideoTitle(youtube_ids[1]));
-	printf("Link: %s", GetVideoLink(youtube_ids[1]));
-	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[1]));
-	printf("Stream: %s", GetVideoStreamLink(youtube_ids[1]));
-	printf("Play for: %i", GetVideoTarget(youtube_ids[1]));
-	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[1]));
-
-	printf("---------- Testing video response %i ----------", youtube_ids[1]);
-	printf("Title: %s", GetVideoTitle(youtube_ids[2]));
-	printf("Link: %s", GetVideoLink(youtube_ids[2]));
-	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[2]));
-	printf("Stream: %s", GetVideoStreamLink(youtube_ids[2]));
-	printf("Play for: %i", GetVideoTarget(youtube_ids[2]));
-	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[2]));
+	printSong(1);
+	printSong(2);
 
 	print("---------- Testing playlist response ----------");
 	printf("Id: %i", myPlaylist);
 	printf("Name: %s", GetPlaylistName(myPlaylist));
 	printf("Songcount: %i", GetPlaylistSongsCount(myPlaylist));
+}
+
+stock printSong(index)
+{
+	printf("---------- Testing video response %i ----------", youtube_ids[index]);
+	printf("Title: %s", GetVideoTitle(youtube_ids[index]));
+	printf("Link: %s", GetVideoLink(youtube_ids[index]));
+	printf("Duration: %i seconds", GetVideoDuration(youtube_ids[index]));
+	printf("Stream: %s", GetVideoStreamLink(youtube_ids[index]));
+	printf("Play for: %i", GetVideoTarget(youtube_ids[index]));
+	printf("Playlist id: %i", GetPlaylistFromVideo(youtube_ids[index]));
 }
 
 public OnMVYoutubeError(youtubeid, const message[])
