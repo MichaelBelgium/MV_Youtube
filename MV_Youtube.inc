@@ -253,16 +253,6 @@ public OnVpsResponse(index, response_code, const data[])
 
 	new JSONNode:response = json_parse_string(data);
 
-	if(index == 9999)
-	{
-		if(json_get_bool(response, "error"))
-		{
-			json_get_string(response, string, sizeof(string), "message");
-			CallLocalFunction("OnMVYoutubeError", "is", index, string);
-		}
-		return 0;
-	}
-
 	if(json_get_bool(response, "error"))
 	{
 		json_get_string(response, string, sizeof(string), "message");
