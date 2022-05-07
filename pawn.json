@@ -4,7 +4,6 @@
 	"entry": "test.pwn",
 	"output": "test.amx",
 	"dependencies": [
-		"Southclaws/samp-stdlib",
 		"Hual/SAMPSON"
 	]
 }
