@@ -77,7 +77,7 @@ stock GetVideoTarget(youtubeid)				return youtubeid == INVALID_YT_ID ? -1 : Yout
 
 stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
-	new id = GetFreeIndex(), requestlink[128];
+	new id = GetFreeIndex(), requestlink[512];
 
 	if(id != INVALID_YT_ID)
 	{
@@ -86,11 +86,10 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 		Youtube[id][UsePos] = usepos;
 		Youtube[id][PlaylistID] = playlist;
 
-		if(strfind(url,"&") != -1) strmid(url,url,0,strfind(url,"&"), 128);
 		format(Youtube[id][Link],256,"%s",url);
 
-		strmid(Youtube[id][ytID], url, strfind(url, "watch?v=", true) + strlen("watch?v="), strlen(url), 16);
 		format(requestlink,sizeof(requestlink),"%s/convert?url=%s&api_token=%s",CONVERTER_PATH,Youtube[id][Link],API_KEY);
+		
 		HTTP(id, HTTP_GET, requestlink, "", "OnVpsResponse");
 	}
 	return id;
@@ -98,7 +97,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 
 stock SearchYoutubeVideos(playerid, const searchquery[])
 {
-	new requestlink[128];
+	new requestlink[512];
 	format(requestlink, sizeof(requestlink), "%s/search?q=%s&max_results=%i&api_token=%s", CONVERTER_PATH, searchquery, MAX_SEARCH_RESULTS,API_KEY);
 	HTTP(playerid, HTTP_GET, requestlink, "", "OnSearchResponse");
 }
@@ -273,6 +272,7 @@ public OnVpsResponse(index, response_code, const data[])
 
 	json_get_string(response, Youtube[index][Title], 256, "title");
 	Youtube[index][Duration] = json_get_int(response, "duration");
+	Youtube[index][ytID] = json_get_int(response, "youtube_id");
 	json_get_string(response, Youtube[index][StreamLink], 512, "file");
 
 	json_close(response);
