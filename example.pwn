@@ -249,7 +249,7 @@ public OnPlaylistAddEntry(playerlistid, youtubeid)
 	return 1;
 }
 
-public OnMVYoutubeError(youtubeid, message[])
+public OnMVYoutubeError(youtubeid, const message[])
 {
 	new string[256], player = GetVideoTarget(youtubeid);
 
