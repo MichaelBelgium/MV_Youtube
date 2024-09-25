@@ -1,3 +1,5 @@
+#define FILTERSCRIPT
+
 #include <a_samp>
 #include <zcmd>
 #include <sscanf2>
@@ -49,18 +51,18 @@ public OnPlayerDisconnect(playerid, reason)
 CMD:search(playerid, params[])
 {
 	//this example will search for video's, list them in a dialog and when clicking on one of them they will download/play.
-	new mysearch[64];
-	if(sscanf(params, "s[64]", mysearch)) return SendClientMessage(playerid, COLOR_RED, "Usage: /search [something]");
+	new mysearch[128];
+	if(sscanf(params, "s[128]", mysearch) || strlen(mysearch) > 64) return SendClientMessage(playerid, COLOR_RED, "Usage: /search [something]");
 	SearchYoutubeVideos(playerid, mysearch);
 	return 1;
 }
 
 CMD:createmyplaylist(playerid,params[])
 {
-	new name[32], string[128];
+	new name[128], string[128];
 	if(gTotalPlaylists >= MAX_PLAYLISTS) return SendClientMessage(playerid, COLOR_RED, "Reached servers max playlists");
 	if(gMyPlaylist[playerid] != INVALID_PLAYLIST_ID) return SendClientMessage(playerid, COLOR_RED, "You already made a playlist");
-	if(sscanf(params, "s[32]", name)) return SendClientMessage(playerid, COLOR_RED, "Usage: /createmyplaylist [playlist name]");
+	if(sscanf(params, "s[128]", name) || strlen(name) > 32) return SendClientMessage(playerid, COLOR_RED, "Usage: /createmyplaylist [playlist name]");
 	gMyPlaylist[playerid] = CreatePlaylist(name);
 	gTotalPlaylists++;
 
@@ -200,7 +202,7 @@ public OnYoutubeVideoFinished(youtubeid)
 	}
 	else
 	{
-		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		for(new i = 0; i < MAX_PLAYERS; i++)
 		{
 			if(gYoutubeID[i] == youtubeid)
 			{
@@ -223,7 +225,7 @@ public OnPlaylistFinished(playlistid)
 	}
 	else
 	{
-		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+		for(new i = 0; i < MAX_PLAYERS; i++)
 		{
 			if(!IsPlayerConnected(i)) continue;
 			if(gMyPlaylist[i] == playlistid)
@@ -302,8 +304,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
 	if(dialogid == DIALOG_SEARCH_AND_PLAY)
 	{
-		if(SearchResults[playerid][listitem][Link][0] == EOS) return 0;
+		if(SearchResults[playerid][listitem][Link][0] == EOS) return 1;
 		PlayYoutubeVideoFor(SearchResults[playerid][listitem][Link], playerid);
+		return 1;
 	}
-	return 1;
+	return 0;
 }

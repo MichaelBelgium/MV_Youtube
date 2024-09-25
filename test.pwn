@@ -8,7 +8,7 @@ main() {
 	for (new i = 0; i < sizeof(youtube_ids); i++) 
 		youtube_ids[i] = INVALID_YT_ID;
 
-	youtube_ids[0] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=TyHvyGVs42U");
+	youtube_ids[0] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=ehCQMDKVJqU");
 	SetTimer("OnTest", 10000, false);
 
 	SearchYoutubeVideos(0, "michaelbelgium");
@@ -20,7 +20,7 @@ public OnTest()
 	printSong(0);
 
 	myPlaylist = CreatePlaylist("Playlist 1");
-	youtube_ids[1] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=uGhKqb2Ow3E", INVALID_PLAYER_ID, myPlaylist);
+	youtube_ids[1] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=jfreFPe99GU", INVALID_PLAYER_ID, myPlaylist);
 	youtube_ids[2] = PlayYoutubeVideoFor("https://www.youtube.com/watch?v=NkrkAsRVLEA", INVALID_PLAYER_ID, myPlaylist);
 	SetTimer("OnTestPlaylist", 10000, false);
 }
