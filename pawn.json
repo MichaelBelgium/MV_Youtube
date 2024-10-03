@@ -4,6 +4,6 @@
 	"entry": "test.pwn",
 	"output": "test.amx",
 	"dependencies": [
-		"Hual/SAMPSON"
+		"Southclaws/pawn-requests"
 	]
 }

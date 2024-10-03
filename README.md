@@ -6,11 +6,11 @@
 
 
 ```PAWN
-native PlayYoutubeVideoFor(url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0) 
+native PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0) 
 	-> returns a youtubeid
 native StopYoutubeVideo(youtubeid)
 
-native IsValidYoutubeURL(string[])
+native IsValidYoutubeURL(const string[])
 native IsYouTubeVideoPlaying(youtubeid)
 
 native GetVideoDuration(youtubeid)
@@ -19,7 +19,7 @@ native GetVideoLink(youtubeid)
 native GetVideoStreamLink(youtubeid)
 native GetVideoTarget(youtubeid)
 
-native CreatePlaylist(name[])
+native CreatePlaylist(const name[])
 	-> returns a playlistid
 native RemovePlaylist(playlistid)
 native GetPlaylistName(playlistid)
@@ -32,14 +32,15 @@ public OnYoutubeSearch(playerid)
 
 public OnYoutubeVideoStart(youtubeid)
 public OnYoutubeVideoFinished(youtubeid)
-public OnMVYoutubeError(youtubeid, message[])
+public OnMVYoutubeError(youtubeid, const message[])
 public OnPlaylistAddEntry(playlistid, youtubeid)
 public OnPlaylistFinished(playlistid)
 ```
 
 # Requirements
 
-* [SAMPSON](https://github.com/Hual/SAMPSON)
+* [pawn-requests](https://github.com/Southclaws/pawn-requests)
+* [Hash-map implementation in PAWN](https://github.com/BigETI/pawn-map) (optional)
 
 # Installing
 
@@ -63,11 +64,9 @@ You are free to use the existing settings of this include that uses the installe
 
 ```PAWN
 #define MAX_YOUTUBE_SAVES	50
-#define INVALID_YT_ID		-1
-#define INVALID_PLAYLIST_ID	-1
 #define MAX_PLAYLISTS		5
 
-#define CONVERTER_PATH		"youtube.michaelbelgium.me/api/converter"
+#define CONVERTER_PATH		"https://youtube.michaelbelgium.me/api/converter/"
 #define MAX_SEARCH_RESULTS 	5
 ```
 
