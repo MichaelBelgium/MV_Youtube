@@ -330,29 +330,21 @@ public OnVpsResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 		}
 	#endif
 
-	new string[256];
-
 	if(status != HTTP_STATUS_OK)
 	{
-		format(string, sizeof(string), "%s - response code: %i", GetError(status), _:status);
+		new string[512], message[128];
+
+		JsonGetString(node, "message", message);
+
+		format(string, sizeof(string), "%s - response code: %i - message: %s", GetError(status), _:status, message);
 		CallLocalFunction("OnMVYoutubeError", "is", index, string);
 		return 0;
 	}
 
-	new bool:error;
-	JsonGetBool(node, "error", error);
-
-	if(error)
-	{
-		JsonGetString(node, "message", string);
-		CallLocalFunction("OnMVYoutubeError", "is", index, string);
-		return 0;
-	}
-
-	JsonGetString(node, "title", Youtube[index][Title]);
+	JsonGetString(node, "title", Youtube[index][Title], 256);
 	JsonGetInt(node, "duration", Youtube[index][Duration]);
-	JsonGetInt(node, "youtube_id", Youtube[index][ytID]);
-	JsonGetString(node, "file", Youtube[index][StreamLink]);
+	JsonGetString(node, "youtube_id", Youtube[index][ytID], 16);
+	JsonGetString(node, "file", Youtube[index][StreamLink], 256);
 
 	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
 	{
