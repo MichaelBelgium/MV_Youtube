@@ -332,6 +332,9 @@ public OnVpsResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 
 	if(status != HTTP_STATUS_OK)
 	{
+		if (Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
+			Youtube[index][PlaylistID] = INVALID_PLAYLIST_ID;
+
 		new string[512], message[128];
 
 		JsonGetString(node, "message", message);
