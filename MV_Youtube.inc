@@ -129,7 +129,7 @@ stock GetVideoTarget(youtubeid)				return youtubeid == INVALID_YT_ID ? -1 : Yout
 
 stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = INVALID_PLAYLIST_ID, bool:usepos = false, Float:distance = 50.0)
 {
-	new id = GetFreeIndex(), requestlink[512];
+	new id = GetFreeIndex();
 
 	if(id != INVALID_YT_ID)
 	{
@@ -139,11 +139,8 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 		Youtube[id][PlaylistID] = playlist;
 
 		format(Youtube[id][Link],256,"%s",url);
-
-		format(requestlink,sizeof(requestlink),"convert?url=%s",Youtube[id][Link]);
-		EncodeYoutubeURL(requestlink);
 		
-		new const Request:ID = RequestJSON(Converter, requestlink, HTTP_METHOD_GET, "OnVpsResponse", .headers = RequestHeaders());
+		new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnVpsResponse", JsonObject("url", JsonString(url)), .headers = RequestHeaders());
 
 		#if defined __MAP_INCLUDED__
 			MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
