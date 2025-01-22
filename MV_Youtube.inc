@@ -70,7 +70,7 @@ new Playlist[MAX_PLAYLISTS][e_plist];
 
 enum pSearchResult
 {
-	Title[64],
+	Title[128],
 	Link[128]
 };
 
@@ -332,15 +332,14 @@ public OnVpsResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 
 	if(status != HTTP_STATUS_OK)
 	{
-		if (Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
-			Youtube[index][PlaylistID] = INVALID_PLAYLIST_ID;
-
 		new string[512], message[128];
 
 		JsonGetString(node, "message", message);
 
 		format(string, sizeof(string), "%s - response code: %i - message: %s", GetError(status), _:status, message);
 		CallLocalFunction("OnMVYoutubeError", "is", index, string);
+
+		Youtube[index][PlaylistID] = INVALID_PLAYLIST_ID;
 		return 0;
 	}
 
@@ -411,8 +410,8 @@ public OnSearchResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 		new Node:result;
 		JsonArrayObject(results, i, result);
 
-		JsonGetString(result, "title", SearchResults[index][i][Title]);
-		JsonGetString(result, "full_link", SearchResults[index][i][Link]);
+		JsonGetString(result, "title", SearchResults[index][i][Title], 128);
+		JsonGetString(result, "full_link", SearchResults[index][i][Link], 128);
 	}
 
 	JsonToggleGC(node, true);
