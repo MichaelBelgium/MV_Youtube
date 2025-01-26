@@ -113,7 +113,7 @@ static stock InitYoutube()
 
 forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
-forward OnVpsResponse(Request:id, E_HTTP_STATUS:status, Node:node);
+forward OnConvertResponse(Request:id, E_HTTP_STATUS:status, Node:node);
 forward OnSearchResponse(Request:id, E_HTTP_STATUS:status, Node:node);
 forward OnMVYoutubeError(youtubeid, const message[]);
 forward OnYoutubeVideoStart(youtubeid);
@@ -140,7 +140,7 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 
 		format(Youtube[id][Link],256,"%s",url);
 		
-		new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnVpsResponse", JsonObject("url", JsonString(url)), .headers = RequestHeaders());
+		new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnConvertResponse", JsonObject("url", JsonString(url)), .headers = RequestHeaders());
 
 		#if defined __MAP_INCLUDED__
 			MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
@@ -311,7 +311,7 @@ PlayYoutubeVideo(youtubeid) //shouldn't use this function outside of the include
 	Youtube[youtubeid][Timer] = SetTimerEx("SongFinished",GetVideoDuration(youtubeid)*1000,false,"i",youtubeid);
 }
 
-public OnVpsResponse(Request:id, E_HTTP_STATUS:status, Node:node)
+public OnConvertResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 {
 	#if defined __MAP_INCLUDED__
 		new index = MAP_get_val_val(LoadRequestToYoutubeID, _:id);
