@@ -115,6 +115,7 @@ forward OnYoutubeVideoFinished(youtubeid);
 forward SongFinished(youtubeid);
 forward OnConvertResponse(Request:id, E_HTTP_STATUS:status, Node:node);
 forward OnSearchResponse(Request:id, E_HTTP_STATUS:status, Node:node);
+forward OnPlaylistInfoResponse(Request:id, E_HTTP_STATUS:status, Node:node);
 forward OnMVYoutubeError(youtubeid, const message[]);
 forward OnYoutubeVideoStart(youtubeid);
 forward OnPlaylistAddEntry(playerlistid, youtubeid);
@@ -140,13 +141,26 @@ stock PlayYoutubeVideoFor(const url[], playfor = INVALID_PLAYER_ID, playlist = I
 
 		format(Youtube[id][Link],256,"%s",url);
 		
-		new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnConvertResponse", JsonObject("url", JsonString(url)), .headers = RequestHeaders());
+		if (playlist == INVALID_PLAYLIST_ID)
+		{
+			new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnConvertResponse", JsonObject("url", JsonString(url)), .headers = RequestHeaders());
 
-		#if defined __MAP_INCLUDED__
-			MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
-		#else
-			Youtube[id][RequestID] = ID;
-		#endif
+			#if defined __MAP_INCLUDED__
+				MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
+			#else
+				Youtube[id][RequestID] = ID;
+			#endif
+		}
+		else
+		{
+			new const Request:ID = RequestJSON(Converter, "info", HTTP_METHOD_GET, "OnPlaylistInfoResponse", JsonObject("q", JsonString(url)), .headers = RequestHeaders());
+
+			#if defined __MAP_INCLUDED__
+				MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
+			#else
+				Youtube[id][RequestID] = ID;
+			#endif
+		}
 	}
 	return id;
 }
@@ -254,14 +268,14 @@ stock GetPlaylistName(playlistid)
 
 stock GetPlaylistSongs(playlistid)
 {
-	new songs[MAX_YOUTUBE_SAVES], pointer = 0;
+	new songs[MAX_YOUTUBE_SAVES], index = 0;
 
 	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++) songs[i] = INVALID_YT_ID;
 	for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
 	{
 		if(Youtube[i][PlaylistID] != playlistid) continue;
-		songs[pointer] = i;
-		pointer++;
+		songs[index] = i;
+		index++;
 	}
 	return songs;
 }
@@ -343,20 +357,65 @@ public OnConvertResponse(Request:id, E_HTTP_STATUS:status, Node:node)
 		return 0;
 	}
 
-	JsonGetString(node, "title", Youtube[index][Title], 256);
-	JsonGetInt(node, "duration", Youtube[index][Duration]);
-	JsonGetString(node, "youtube_id", Youtube[index][ytID], 16);
-	JsonGetString(node, "file", Youtube[index][StreamLink], 256);
-
-	if(Youtube[index][PlaylistID] != INVALID_PLAYLIST_ID)
+	if (Youtube[index][PlaylistID] == INVALID_PLAYLIST_ID)
 	{
-		CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
-
-		if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) != 1)
-			return 0;
+		JsonGetString(node, "title", Youtube[index][Title], 256);
+		JsonGetInt(node, "duration", Youtube[index][Duration]);
+		JsonGetString(node, "youtube_id", Youtube[index][ytID], 16);
 	}
 
+	JsonGetString(node, "file", Youtube[index][StreamLink], 256);
+
 	PlayYoutubeVideo(index);
+	return 1;
+}
+
+public OnPlaylistInfoResponse(Request:id, E_HTTP_STATUS:status, Node:node)
+{
+	#if defined __MAP_INCLUDED__
+		new index = MAP_get_val_val(LoadRequestToPlayerID, _:id);
+		MAP_remove_val(LoadRequestToPlayerID, _:id);
+	#else
+		new index = -1;
+
+		for(new i = 0; i < sizeof(Youtube); i++)
+		{
+			if (Youtube[i][RequestID] == id)
+			{
+				Youtube[i][RequestID] = Request:-1;
+				index = i;
+				break;
+			}
+		}
+	#endif
+
+	new string[256];
+
+	if(status != HTTP_STATUS_OK)
+	{
+		format(string, sizeof(string), "%s - response code: %i", GetError(status), _:status);
+		CallLocalFunction("OnMVYoutubeError", "is", index, string);
+		return 0;
+	}
+
+	JsonGetString(node, "title", Youtube[index][Title], 256);
+	JsonGetInt(node, "duration", Youtube[index][Duration]);
+	JsonGetString(node, "id", Youtube[index][ytID], 16);
+	JsonGetString(node, "url", Youtube[index][Link], 256);
+
+	CallLocalFunction("OnPlaylistAddEntry", "ii", Youtube[index][PlaylistID], index);
+
+	if(GetPlaylistSongsCount(Youtube[index][PlaylistID]) == 1)
+	{
+		new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnConvertResponse", JsonObject("url", JsonString(Youtube[index][Link])), .headers = RequestHeaders());
+
+		#if defined __MAP_INCLUDED__
+			MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
+		#else
+			Youtube[index][RequestID] = ID;
+		#endif
+	}
+	
 	return 1;
 }
 
@@ -434,7 +493,15 @@ public SongFinished(youtubeid)
 		for(new i = 0; i < MAX_YOUTUBE_SAVES; i++)
 		{
 			if(Youtube[i][PlaylistID] != plist) continue;
-			PlayYoutubeVideo(i);
+			
+			new const Request:ID = RequestJSON(Converter, "convert", HTTP_METHOD_POST, "OnConvertResponse", JsonObject("url", JsonString(Youtube[i][Link])), .headers = RequestHeaders());
+
+			#if defined __MAP_INCLUDED__
+				MAP_insert_val_val(LoadRequestToYoutubeID, _:ID, id);
+			#else
+				Youtube[i][RequestID] = ID;
+			#endif
+
 			finished = false;
 			break;
 		}
